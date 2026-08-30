@@ -107,9 +107,13 @@ node_modules/
 
 ## Nota de Segurança
 
-Harbor inclui uma camada de criptografia customizada e educacional para arquivos `.bcb`. Use para empacotamento e compartilhamento controlado de projetos, não como substituto de criptografia auditada para produção.
+Harbor criptografa arquivos `.bcb` com AES-GCM usando o pacote `cryptography`. Use para empacotamento e compartilhamento controlado de projetos, não como substituto de um processo de segurança completo e auditado para produção.
 
-Já estamos trabalhando para substituir pelo AES.
+Instale as dependências antes de usar exportações criptografadas:
+
+```bash
+pip install -r requirements.txt
+```
 
 ## Estrutura do Projeto
 

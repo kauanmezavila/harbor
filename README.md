@@ -107,9 +107,13 @@ node_modules/
 
 ## Security Note
 
-Harbor includes a custom educational encryption layer for `.bcb` files. Use it for project packaging and controlled sharing, not as a replacement for audited production cryptography.
+Harbor encrypts `.bcb` files with AES-GCM through the `cryptography` package. Use it for project packaging and controlled sharing, not as a replacement for a full audited production security process.
 
-We are working to change to AES.
+Install dependencies before using encrypted exports:
+
+```bash
+pip install -r requirements.txt
+```
 
 ## Project Structure
 

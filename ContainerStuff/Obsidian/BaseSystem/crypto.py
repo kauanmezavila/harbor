@@ -1,82 +1,62 @@
 import base64
+import os
+
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 
-ALFABETO = (
-    '„ĈгŃç"´ш}=•œ†wzДª≅Dõ·⊆Ê0ΑAΓ₿Ųľё₱sè§oŗэSYłŷC›Å₦—i✓цČъĎa[↕ÇÐΨ³ůŀ№₺F≤j|xĘőΝ⁸,ŭ+ġŦΣИ/∈Œь9ĵÔÏđ.)₈β✔∫ЭNêfΠb₆ãřMĳø©ρūЮUÖÈl£ŏψKĔκ$ģĤ@чZēìŰħιôыı⇔♦ЛÓСtЯg∵ÌJщ∅īйĺhŵàÉЙ₉ŎyÒ↑āâ₫ór²₇¹Δĥ∂⁰ШP5Â7Ξ?ĐĉĨ6ΡQ]žĄV‰″Õé(ţÁ4čŻÚŜņğ₾ΕºŹŧχКcмÛ←т₄ñ―üź2–ăĝ3☆₵ųθŊ{úĶ¡…οö★&д⊃еÝ⁶Æ♫pЗΧÍγхĪňŌ¿ŘζėąnбĕÃęΟëįýУτ∑vH‹сśk1ćİΚ€Ф↔₅áλĹØνĴ^OĚφ฿íξōſ∝_8Τ✖ЫЬк%₡∪ŸŽ~р⁷Eл√ŪпОń⇑жЧî↓∞ŐŤяĭŋΜŠ»Ś¨ΒĽ×ĮŁ₽Ŵũ∉TХĞdĬŞĂ;‚G-Ţ®уНš⊇⇒Ň#вe⁵ķю∓≠!−Ġÿ′ΗĻþΦżŅĢùum⁴BĩАò⁹⇓ΛßŬĖqÄ⇕π₸εWΖηŝ₁МЪзR₩ďÀ÷«Ц∩ĿŕL¥Б₴Ē‡Ů¶₂₀σ∆υ∴♣ÑË∇ΥÜ*αи¢ŶП≥ĆÎĜIаŉωВ♥фû₼¬ΩXť₃<ðæΙ♪♠ĲåĦ∏⇐РТГĀЖ™>űä→₹ЕЁŨ✕ļċĊ₲нΘо℠:ïŖěÞμŔ≈ЩδşÙ⊂'
-)
+ALFABETO = ""
+AES_PREFIX = "HBAES1:"
+SALT_SIZE = 16
+NONCE_SIZE = 12
+KEY_SIZE = 32
+KDF_ITERATIONS = 390000
 
 
-def chave_valida(chave, alfabeto):
-    """Check whether every password character exists in the cipher alphabet."""
-    if not chave:
-        return False
+def chave_valida(chave, alfabeto=None):
+    return bool(chave)
 
-    for c in chave:
-        if c not in alfabeto:
-            return False
 
-    return True
+def _key(chave, salt):
+    return PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=KEY_SIZE,
+        salt=salt,
+        iterations=KDF_ITERATIONS,
+    ).derive(chave.encode("utf-8"))
 
 
 def BCB_bytes_text(path):
-    """Read a binary file and return its Base64 text representation."""
     with open(path, "rb") as arquivo:
-        dados = arquivo.read()
-
-    texto = base64.b64encode(dados).decode("ascii")
-    return texto
+        return base64.b64encode(arquivo.read()).decode("ascii")
 
 
 def BCB_text_bytes(path):
-    """Read Base64 text from a file and return decoded bytes."""
-    with open(path, "r") as arquivo:
-        texto = arquivo.read()
-
-    dados = base64.b64decode(texto)
-    return dados
+    with open(path, "r", encoding="utf-8") as arquivo:
+        return base64.b64decode(arquivo.read())
 
 
-def BCB_Cryptography_bytes_passwd(texto, chave, iv=7):
-    """Encrypt text using the Harbor rolling alphabet cipher."""
-    alphabet_size = len(ALFABETO)
-    resultado = ""
-    prev = iv
-
-    i = 0
-    for c in texto:
-        if c in ALFABETO:
-            p = ALFABETO.index(c)
-            k = ALFABETO.index(chave[i % len(chave)])
-
-            nova_pos = (p + k + prev) % alphabet_size
-            resultado += ALFABETO[nova_pos]
-
-            prev = nova_pos
-            i += 1
-        else:
-            resultado += c
-
-    return resultado
+def BCB_Cryptography_bytes_passwd(texto, chave, iv=None):
+    salt = os.urandom(SALT_SIZE)
+    nonce = os.urandom(NONCE_SIZE)
+    encrypted = AESGCM(_key(chave, salt)).encrypt(
+        nonce,
+        texto.encode("utf-8"),
+        None,
+    )
+    payload = base64.b64encode(salt + nonce + encrypted).decode("ascii")
+    return AES_PREFIX + payload
 
 
-def BCB_Descryptography_bytes_passwd(texto, chave, iv=7):
-    """Decrypt text produced by BCB_Cryptography_bytes_passwd."""
-    alphabet_size = len(ALFABETO)
-    resultado = ""
-    prev = iv
+def BCB_Descryptography_bytes_passwd(texto, chave, iv=None):
+    if not texto.startswith(AES_PREFIX):
+        raise ValueError("Unsupported encrypted file format.")
 
-    i = 0
-    for c in texto:
-        if c in ALFABETO:
-            pos_c = ALFABETO.index(c)
-            k = ALFABETO.index(chave[i % len(chave)])
+    payload = base64.b64decode(texto[len(AES_PREFIX):])
+    salt = payload[:SALT_SIZE]
+    nonce = payload[SALT_SIZE:SALT_SIZE + NONCE_SIZE]
+    encrypted = payload[SALT_SIZE + NONCE_SIZE:]
 
-            p = (pos_c - k - prev) % alphabet_size
-            resultado += ALFABETO[p]
-
-            prev = pos_c
-            i += 1
-        else:
-            resultado += c
-
-    return resultado
+    decrypted = AESGCM(_key(chave, salt)).decrypt(nonce, encrypted, None)
+    return decrypted.decode("utf-8")
