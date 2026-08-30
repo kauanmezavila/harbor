@@ -43,7 +43,7 @@ cd Harbor
 python -m pip install pathspec
 ```
 
-Harbor usa a biblioteca padrão do Python e apenas uma dependência externa: `pathspec`.
+Harbor usa a biblioteca padrão do Python e apenas duas dependências externas: `pathspec` e `cryptography`.
 
 ## Como rodar
 

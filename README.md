@@ -43,7 +43,7 @@ cd Harbor
 python -m pip install pathspec
 ```
 
-Harbor uses only the Python standard library plus `pathspec`.
+Harbor uses only the Python standard library plus `pathspec` and `cryptography`.
 
 ## Run
 
