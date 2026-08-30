@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="imgs/Harbor.png" alt="Logo do Harbor" width="180">
+  <img src="imgs/HarborBanner.png" alt="Logo do Harbor" width="180">
 </p>
 
 <h1 align="center">Harbor</h1>
