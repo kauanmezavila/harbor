@@ -3,7 +3,7 @@ import json
 from ContainerStuff.dirtrain import main_dirtrain
 
 
-def normalizar_lista(valor):
+def normalize_list(value):
     """
     Convert comma-separated input into a normalized list.
 
@@ -12,19 +12,19 @@ def normalizar_lista(valor):
         "x86_64, arm64"  -> ["x86_64", "arm64"]
     """
 
-    if not valor:
+    if not value:
         return None
 
-    valores = [
+    values = [
         item.strip()
-        for item in valor.split(",")
+        for item in value.split(",")
         if item.strip()
     ]
 
-    return valores or None
+    return values or None
 
 
-def normalizar_arquitetura(arquitetura):
+def normalize_architecture(architecture):
     """
     Normalize architecture names to Harbor's standard names.
     """
@@ -46,15 +46,15 @@ def normalizar_arquitetura(arquitetura):
         "arm32": "arm",
     }
 
-    arquitetura = arquitetura.strip().lower()
+    architecture = architecture.strip().lower()
 
     return aliases.get(
-        arquitetura,
-        arquitetura,
+        architecture,
+        architecture,
     )
 
 
-def normalizar_os(sistema):
+def normalize_os(system):
     """
     Normalize operating system names to Harbor's standard names.
     """
@@ -75,18 +75,18 @@ def normalizar_os(sistema):
         "freebsd": "freebsd",
     }
 
-    sistema = sistema.strip().lower()
+    system = system.strip().lower()
 
     return aliases.get(
-        sistema,
-        sistema,
+        system,
+        system,
     )
 
 
 def header(path):
     """Build the metadata header for a Harbor container."""
 
-    def montar_header():
+    def build_header():
         tree, stack_list = main_dirtrain(path)
 
         default_project_name = list(tree.keys())[0]
@@ -115,16 +115,16 @@ def header(path):
             "(comma-separated, e.g. x86_64, arm64): "
         ).strip()
 
-        architectures = normalizar_lista(
+        architectures = normalize_list(
             architecture_input
         )
 
         if architectures:
             architectures = [
-                normalizar_arquitetura(
-                    arquitetura
+                normalize_architecture(
+                    architecture
                 )
-                for arquitetura in architectures
+                for architecture in architectures
             ]
 
             # Remove duplicates while preserving order.
@@ -141,16 +141,16 @@ def header(path):
             "(comma-separated, e.g. linux, windows): "
         ).strip()
 
-        operating_systems = normalizar_lista(
+        operating_systems = normalize_list(
             os_input
         )
 
         if operating_systems:
             operating_systems = [
-                normalizar_os(
-                    sistema
+                normalize_os(
+                    system
                 )
-                for sistema in operating_systems
+                for system in operating_systems
             ]
 
             # Remove duplicates while preserving order.
@@ -159,12 +159,40 @@ def header(path):
             )
 
         # -------------------------------------------------
+        # Owners name
+        # -------------------------------------------------
+
+        while True:
+            owner_name = input(
+                "Enter the code owner/maintener name/alias: "
+            ).strip()
+
+            confirmation = input(
+                f"'{owner_name}' is right?"
+                " [y/n]: "
+            ).strip().lower()
+
+            if confirmation == "y":
+                break
+
+        # -------------------------------------------------
+        # Short description
+        # -------------------------------------------------
+
+        short_description = input(
+            "Write a short description"
+            "(press Enter to confirm): "
+        )
+
+        # -------------------------------------------------
         # Final header
         # -------------------------------------------------
 
         final_header = {
             "PROJECT NAME": project_name,
+            "PROJECT DESCRIPTION": short_description,
             "PROJECT VERSION": project_version,
+            "PROJECT OWNER": owner_name,
 
             "COMPATIBILITY": {
                 "ARCHITECTURES": architectures,
@@ -180,7 +208,7 @@ def header(path):
             project_name + "-[HARBOR]",
         )
 
-    header_data, project_name = montar_header()
+    header_data, project_name = build_header()
 
     with open(
         "header.json",

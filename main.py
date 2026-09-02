@@ -7,9 +7,11 @@ try:
 except ImportError:
     pass
 
-from ContainerStuff.acess import restaurar_container
-from ContainerStuff.wrapper import main_wrapper, verify, update_hash
-from ContainerStuff.test import test_compatibility
+from ContainerStuff.access import restore_container
+from ContainerStuff.compatibility import test_compatibility
+from ContainerStuff.WrapperStuff.hashflux import update_hash
+from ContainerStuff.WrapperStuff.verifyflux import verify
+from ContainerStuff.wrapper import main_wrapper
 
 RESET = "\033[0m"
 BOLD = "\033[1m"
@@ -66,7 +68,7 @@ def main():
 {BOLD}{CYAN}  wrapper{RESET} <path>         Create a Harbor container
                              <path> is optional. Defaults to the current directory.
 
-{BOLD}{CYAN}  acess{RESET}   <file> <out>   Restore an encrypted container
+{BOLD}{CYAN}  access{RESET}  <file> <out>   Restore an encrypted container
                              <file> is required: .bcb file path or name.
                              <out> is optional. Defaults to the current directory.
 
@@ -88,18 +90,15 @@ def main():
             else:
                 main_wrapper()
 
-        elif cmd[0] == "acess":
+        elif cmd[0] == "access":
             if len(cmd) > 1:
-                arquivo_bcb = Path(cmd[1])
-                if len(cmd) > 2:
-                    diretorio_saida = Path(cmd[2])
-                else:
-                    diretorio_saida = Path(".")
-                senha = input(f"{BOLD}{CYAN}Enter password for the container: {RESET}")
+                bcb_file = Path(cmd[1])
+                output_dir = Path(cmd[2]) if len(cmd) > 2 else Path(".")
+                password = input(f"{BOLD}{CYAN}Enter password for the container: {RESET}")
                 try:
-                    restaurar_container(arquivo_bcb, senha, diretorio_saida)
-                except ValueError as e:
-                    print(e)
+                    restore_container(bcb_file, password, output_dir)
+                except ValueError as error:
+                    print(error)
             else:
                 print(
                     f"[{RED}ERROR{RESET}] Missing required argument: <file> "
@@ -117,9 +116,7 @@ def main():
 
         elif cmd[0] == "uphash":
             if len(cmd) > 1:
-                ask = input(
-"[?] Update container hashes? [y/N]: "
-).strip().lower()
+                ask = input("[?] Update container hashes? [y/N]: ").strip().lower()
 
                 if ask == "y":
                     update_hash(Path(cmd[1]))

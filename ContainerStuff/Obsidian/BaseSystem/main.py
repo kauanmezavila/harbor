@@ -1,27 +1,27 @@
-from crypto import (
-    ALFABETO,
+from ContainerStuff.Obsidian.BaseSystem.crypto import (
+    ALPHABET,
     BCB_Cryptography_bytes_passwd,
     BCB_Descryptography_bytes_passwd,
     BCB_bytes_text,
-    chave_valida,
+    valid_key,
 )
 
 
-def main_bcb_crypt_flux_v1(path, senha):
+def main_bcb_crypt_flux_v1(path, password):
     """Read a file and return its encrypted Base64 payload."""
-    if chave_valida(senha, ALFABETO) is True:
+    if valid_key(password, ALPHABET) is True:
         file_bytes = BCB_bytes_text(path)
-        cripto_final = BCB_Cryptography_bytes_passwd(file_bytes, senha)
-        return cripto_final
+        encrypted_content = BCB_Cryptography_bytes_passwd(file_bytes, password)
+        return encrypted_content
 
     return
 
 
-def main_bcb_decrypt_flux_v1(path, senha):
+def main_bcb_decrypt_flux_v1(path, password):
     """Read a file and return its decrypted Base64 payload."""
-    if chave_valida(senha, ALFABETO) is True:
+    if valid_key(password, ALPHABET) is True:
         file_bytes = BCB_bytes_text(path)
-        decripto_final = BCB_Descryptography_bytes_passwd(file_bytes, senha)
-        return decripto_final
+        decrypted_content = BCB_Descryptography_bytes_passwd(file_bytes, password)
+        return decrypted_content
 
     return

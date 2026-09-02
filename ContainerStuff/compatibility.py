@@ -26,7 +26,7 @@ GRAY = "\033[90m"
 # DIRECTORY
 # ============================================================
 
-def obter_diretorio() -> Path:
+def get_directory() -> Path:
     """Read and validate the project directory from CLI arguments."""
 
     parser = argparse.ArgumentParser(
@@ -34,7 +34,7 @@ def obter_diretorio() -> Path:
     )
 
     parser.add_argument(
-        "diretorio",
+        "directory",
         nargs="?",
         default=".",
         help="Path to the project directory (default: current directory).",
@@ -42,30 +42,30 @@ def obter_diretorio() -> Path:
 
     args = parser.parse_args()
 
-    caminho = (
-        Path(args.diretorio)
+    path = (
+        Path(args.directory)
         .expanduser()
         .resolve()
     )
 
-    if not caminho.exists():
+    if not path.exists():
         parser.error(
-            f"[{RED}ERRO{RESET}] "
-            f"The path does not exist: {caminho}!"
+            f"[{RED}ERROR{RESET}] "
+            f"The path does not exist: {path}!"
         )
 
-    if not caminho.is_dir():
+    if not path.is_dir():
         parser.error(
-            f"[{RED}ERRO{RESET}] "
-            f"The path is not a directory: {caminho}!"
+            f"[{RED}ERROR{RESET}] "
+            f"The path is not a directory: {path}!"
         )
 
     print(
         f"[{GREEN} OK {RESET}] "
-        f"Project found: [{caminho}]"
+        f"Project found: [{path}]"
     )
 
-    return caminho
+    return path
 
 
 # ============================================================
@@ -146,18 +146,18 @@ def compare_versions(installed, required):
     Missing components are treated as zero.
     """
 
-    tamanho = max(
+    length = max(
         len(installed),
         len(required),
     )
 
     installed = installed + (
         0,
-    ) * (tamanho - len(installed))
+    ) * (length - len(installed))
 
     required = required + (
         0,
-    ) * (tamanho - len(required))
+    ) * (length - len(required))
 
     return installed >= required
 
@@ -247,7 +247,7 @@ def check_langs(lang):
 # OS / ARCHITECTURE
 # ============================================================
 
-def normalizar_os(value):
+def normalize_os(value):
     """
     Normalize operating system names.
 
@@ -283,7 +283,7 @@ def normalizar_os(value):
     )
 
 
-def normalizar_arch(value):
+def normalize_arch(value):
     """
     Normalize architecture names.
 
@@ -319,7 +319,7 @@ def normalizar_arch(value):
     )
 
 
-def normalizar_lista(value, normalizador):
+def normalize_list(value, normalizer):
     """
     Normalize a compatibility value into a list.
 
@@ -338,15 +338,15 @@ def normalizar_lista(value, normalizador):
     if not isinstance(value, list):
         return []
 
-    resultado = []
+    result = []
 
     for item in value:
-        item = normalizador(item)
+        item = normalizer(item)
 
-        if item and item not in resultado:
-            resultado.append(item)
+        if item and item not in result:
+            result.append(item)
 
-    return resultado
+    return result
 
 
 def check_os_and_arch(
@@ -364,22 +364,22 @@ def check_os_and_arch(
     actual_os_raw = platform.system()
     actual_arch_raw = platform.machine()
 
-    actual_os = normalizar_os(
+    actual_os = normalize_os(
         actual_os_raw
     )
 
-    actual_arch = normalizar_arch(
+    actual_arch = normalize_arch(
         actual_arch_raw
     )
 
-    supported_os = normalizar_lista(
+    supported_os = normalize_list(
         supported_os,
-        normalizar_os,
+        normalize_os,
     )
 
-    supported_architectures = normalizar_lista(
+    supported_architectures = normalize_list(
         supported_architectures,
-        normalizar_arch,
+        normalize_arch,
     )
 
     # --------------------------------------------------------
@@ -433,28 +433,28 @@ def test_compatibility(path=None):
     with the Harbor container/project.
     """
 
-    diretorio = (
+    directory = (
         path
         if path
-        else obter_diretorio()
+        else get_directory()
     )
 
-    diretorio = (
-        Path(diretorio)
+    directory = (
+        Path(directory)
         .expanduser()
         .resolve()
     )
 
-    if not diretorio.exists():
+    if not directory.exists():
         raise FileNotFoundError(
-            f"\n[{RED}ERRO{RESET}] "
-            f"Project directory not found: {diretorio}"
+            f"\n[{RED}ERROR{RESET}] "
+            f"Project directory not found: {directory}"
         )
 
-    if not diretorio.is_dir():
+    if not directory.is_dir():
         raise NotADirectoryError(
-            f"\n[{RED}ERRO{RESET}] "
-            f"Project path is not a directory: {diretorio}"
+            f"\n[{RED}ERROR{RESET}] "
+            f"Project path is not a directory: {directory}"
         )
 
     # --------------------------------------------------------
@@ -462,20 +462,20 @@ def test_compatibility(path=None):
     # --------------------------------------------------------
 
     info_path = (
-        diretorio
+        directory
         / "Info"
         / "header.json"
     )
 
     if not info_path.exists():
         raise FileNotFoundError(
-            f"\n[{RED}ERRO{RESET}] "
+            f"\n[{RED}ERROR{RESET}] "
             f"header.json not found: {info_path}"
         )
 
     if not info_path.is_file():
         raise FileNotFoundError(
-            f"\n[{RED}ERRO{RESET}] "
+            f"\n[{RED}ERROR{RESET}] "
             f"Invalid header.json: {info_path}"
         )
 
@@ -489,7 +489,7 @@ def test_compatibility(path=None):
 
     except json.JSONDecodeError as error:
         raise ValueError(
-            f"\n[{RED}ERRO{RESET}] "
+            f"\n[{RED}ERROR{RESET}] "
             f"Invalid JSON in header.json: {error}"
         )
 
@@ -823,6 +823,4 @@ def test_compatibility(path=None):
 # ============================================================
 
 if __name__ == "__main__":
-    test_compatibility(
-        "~/Repositório/Projetos/Harbor-[HARBOR]"
-    )
+    test_compatibility()

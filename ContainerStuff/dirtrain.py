@@ -25,18 +25,18 @@ def c(text: str, color: str) -> str:
     return f"{color}{text}{RESET}"
 
 
-def titulo(texto: str):
+def title(text: str):
     """Print a compact section title."""
-    largura = 64
+    width = 64
 
     print()
-    print(c("//" + "=" * largura + r"\\", CYAN))
-    print(c("||", CYAN) + f"  {texto:<{largura - 2}}" + c("||", CYAN))
-    print(c(r"\\" + "=" * largura + "//", CYAN))
+    print(c("//" + "=" * width + r"\\", CYAN))
+    print(c("||", CYAN) + f"  {text:<{width - 2}}" + c("||", CYAN))
+    print(c(r"\\" + "=" * width + "//", CYAN))
     print()
 
 
-def linha():
+def line():
     """Print a visual divider."""
     print(c("--" * 64, GRAY))
 
@@ -65,7 +65,7 @@ class StackDetector:
         self.detected.setdefault(stack, []).append(path)
 
 
-def buscar_runtime(stack: str):
+def find_runtime(stack: str):
     """Find the first runtime declared for a detected stack."""
     for category in ("extensions", "files"):
         for data in STACKS.get(category, {}).values():
@@ -84,123 +84,123 @@ def buscar_runtime(stack: str):
     return None
 
 
-def carregar_ignore(diretorio: str):
+def load_ignore(directory: str):
     """Load .harbignore rules from a scanned directory."""
-    ignore_path = os.path.join(diretorio, ".harbignore")
+    ignore_path = os.path.join(directory, ".harbignore")
 
     if not os.path.isfile(ignore_path):
         return None
 
     with open(ignore_path, "r", encoding="utf-8") as f:
-        linhas = [
-            linha.strip()
-            for linha in f.readlines()
-            if linha.strip() and not linha.lstrip().startswith("#")
+        lines = [
+            line.strip()
+            for line in f.readlines()
+            if line.strip() and not line.lstrip().startswith("#")
         ]
 
-    if not linhas:
+    if not lines:
         return None
 
-    return pathspec.PathSpec.from_lines("gitwildmatch", linhas)
+    return pathspec.PathSpec.from_lines("gitwildmatch", lines)
 
 
-def mapear_diretorio(
-    diretorio: str,
-    salvar_json: bool = True,
+def map_directory(
+    directory: str,
+    save_json: bool = True,
     json_path: str = "tree.json",
 ):
     """Map a directory tree and collect stack detection details."""
     detector = StackDetector()
-    diretorio = os.path.abspath(diretorio)
-    ignore = carregar_ignore(diretorio)
+    directory = os.path.abspath(directory)
+    ignore = load_ignore(directory)
     stats = {"files": 0, "folders": 0, "ignored": 0}
 
-    def ignorado(caminho: str):
+    def is_ignored(path: str):
         if ignore is None:
             return False
 
-        relativo = os.path.relpath(caminho, diretorio).replace(os.sep, "/")
-        return ignore.match_file(relativo)
+        relative_path = os.path.relpath(path, directory).replace(os.sep, "/")
+        return ignore.match_file(relative_path)
 
-    def construir(caminho: str):
+    def build_tree(path: str):
         tree = {}
 
         try:
-            itens = sorted(os.listdir(caminho), key=lambda x: x.lower())
+            items = sorted(os.listdir(path), key=lambda x: x.lower())
         except PermissionError:
-            print(c(f" ! No permission: {caminho}", YELLOW))
+            print(c(f" ! No permission: {path}", YELLOW))
             return tree
 
-        for item in itens:
-            caminho_item = os.path.join(caminho, item)
+        for item in items:
+            item_path = os.path.join(path, item)
 
-            if ignorado(caminho_item):
+            if is_ignored(item_path):
                 stats["ignored"] += 1
-                relativo = os.path.relpath(caminho_item, diretorio)
-                print(c(f"  > ignored  {relativo}", GRAY))
+                relative_path = os.path.relpath(item_path, directory)
+                print(c(f"  > ignored  {relative_path}", GRAY))
                 continue
 
-            if os.path.isdir(caminho_item):
+            if os.path.isdir(item_path):
                 stats["folders"] += 1
                 stack = detector.detect(item, False)
 
                 if stack:
-                    detector.add_stack(stack, caminho_item)
+                    detector.add_stack(stack, item_path)
 
-                tree[item] = construir(caminho_item)
+                tree[item] = build_tree(item_path)
                 continue
 
             stats["files"] += 1
             stack = detector.detect(item, True)
 
             if stack:
-                detector.add_stack(stack, caminho_item)
+                detector.add_stack(stack, item_path)
 
             tree[item] = None
 
         return tree
 
-    nome_raiz = os.path.basename(diretorio)
-    print(c(f"  {c('>', GREEN)} Analising {c(nome_raiz, WHITE)}...", WHITE))
+    root_name = os.path.basename(directory)
+    print(c(f"  {c('>', GREEN)} Analyzing {c(root_name, WHITE)}...", WHITE))
 
-    tree = {nome_raiz: construir(diretorio)}
+    tree = {root_name: build_tree(directory)}
 
-    if salvar_json:
+    if save_json:
         with open(json_path, "w", encoding="utf-8") as f:
             json.dump(tree, f, indent=4, ensure_ascii=False)
 
     return tree, detector.detected, stats
 
 
-def mostrar_tree(tree: dict):
+def show_tree(tree: dict):
     """Print the mapped project tree."""
-    titulo("PROJECT TREE")
+    title("PROJECT TREE")
 
-    def imprimir(no: dict, prefixo=""):
-        itens = list(no.items())
+    def print_node(node: dict, prefix=""):
+        items = list(node.items())
 
-        for i, (nome, conteudo) in enumerate(itens):
-            ultimo = i == len(itens) - 1
-            conector = "└── " if ultimo else "├── "
+        for i, (name, content) in enumerate(items):
+            is_last = i == len(items) - 1
+            connector = "└── " if is_last else "├── "
 
-            if isinstance(conteudo, dict):
-                print(prefixo + c(conector, CYAN) + c("/", BLUE) + c(nome, WHITE))
-                imprimir(conteudo, prefixo + ("    " if ultimo else "│   "))
+            if isinstance(content, dict):
+                print(prefix + c(connector, CYAN) + c("/", BLUE) + c(name, WHITE))
+                print_node(content, prefix + ("    " if is_last else "│   "))
                 continue
 
-            extensao = Path(nome).suffix
-            icone = "" if extensao else ":"
-            cor = WHITE if extensao else GRAY
-            print(prefixo + c(conector, GRAY) + c(f"{icone} ", CYAN) + c(nome, cor))
+            extension = Path(name).suffix
+            icon = "" if extension else ":"
+            color = WHITE if extension else GRAY
+            print(prefix + c(connector, GRAY) + c(f"{icon} ", CYAN) + c(name, color))
 
-    raiz, conteudo = next(iter(tree.items()))
-    print(c("> ", MAGENTA) + c(raiz, BOLD + WHITE))
-    imprimir(conteudo)
+    root, content = next(iter(tree.items()))
+    print(c("> ", MAGENTA) + c(root, BOLD + WHITE))
+    print_node(content)
 
 
-def mostrar_stacks(stacks: dict, stats: dict | None = None):
+def show_stacks(stacks: dict, stats: dict | None = None):
     """Print detected stacks and return their runtime list."""
-    titulo("DETECTED STACKS")
+    title("DETECTED STACKS")
     stack_list: list[str] = []
 
     if not stacks:
@@ -214,35 +214,35 @@ def mostrar_stacks(stacks: dict, stats: dict | None = None):
     print()
 
     for index, (stack, paths) in enumerate(sorted(stacks.items())):
-        ultimo = index == len(stacks) - 1
-        runtime = buscar_runtime(stack)
+        is_last = index == len(stacks) - 1
+        runtime = find_runtime(stack)
 
         if runtime and runtime not in stack_list:
             stack_list.append(runtime)
 
-        print(c("└── " if ultimo else "├── ", GRAY) + c("◆ ", GREEN) + c(stack, BOLD + WHITE))
+        print(c("└── " if is_last else "├── ", GRAY) + c("◆ ", GREEN) + c(stack, BOLD + WHITE))
 
         if runtime:
             print(c("    ├── runtime: ", GRAY) + c(runtime, CYAN))
 
         for path_index, path in enumerate(paths):
-            ultimo_path = path_index == len(paths) - 1
+            is_last_path = path_index == len(paths) - 1
 
-            if ultimo:
-                prefixo = "    └── " if ultimo_path else "    ├── "
+            if is_last:
+                prefix = "    └── " if is_last_path else "    ├── "
             else:
-                prefixo = "│   └── " if ultimo_path else "│   ├── "
+                prefix = "│   └── " if is_last_path else "│   ├── "
 
-            print(c(prefixo, GRAY) + c(os.path.normpath(path), DIM + WHITE))
+            print(c(prefix, GRAY) + c(os.path.normpath(path), DIM + WHITE))
 
-        print(c("│", GRAY) if not ultimo else "")
+        print(c("│", GRAY) if not is_last else "")
 
     return stack_list
 
 
-def mostrar_resumo(stats: dict, stacks: dict, stack_list: list[str]):
+def show_summary(stats: dict, stacks: dict, stack_list: list[str]):
     """Print scan totals."""
-    titulo("SCAN SUMMARY")
+    title("SCAN SUMMARY")
 
     total_stacks = len(stacks)
     print(f"  {c('FILES', CYAN):<20}{stats['files']}")
@@ -253,17 +253,17 @@ def mostrar_resumo(stats: dict, stacks: dict, stack_list: list[str]):
     print()
 
 
-def main_dirtrain(diretorio: str):
+def main_dirtrain(directory: str):
     """Scan a project and return its tree plus detected runtimes."""
-    titulo("HARBOR <SCAN>")
+    title("HARBOR <SCAN>")
 
-    print(c("  Target  ", GRAY) + c(os.path.abspath(diretorio), WHITE))
+    print(c("  Target  ", GRAY) + c(os.path.abspath(directory), WHITE))
     print()
 
-    tree, stacks, stats = mapear_diretorio(diretorio)
-    mostrar_tree(tree)
-    stack_list = mostrar_stacks(stacks, stats)
-    mostrar_resumo(stats, stacks, stack_list)
+    tree, stacks, stats = map_directory(directory)
+    show_tree(tree)
+    stack_list = show_stacks(stacks, stats)
+    show_summary(stats, stacks, stack_list)
 
     print(c("OK Scan concluded.", GREEN))
     print()
