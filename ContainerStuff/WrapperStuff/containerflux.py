@@ -108,7 +108,21 @@ def load_ignore(
                 f"[{YELLOW}INFO{RESET}] "
                 "No default .harbignore found."
             )
-            return None
+
+            answer = input(
+                "\n[?] Use default Harbor .harbignore? [Y/n]: "
+            ).strip().lower()
+
+            if answer in ("", "y", "yes"):
+                ignore_path = default_ignore
+
+            else:
+                print(
+                    f"[{YELLOW}INFO{RESET}] "
+                    "No ignore file will be used."
+                )
+                return None
+        
 
     else:
         if not default_ignore.is_file():
@@ -116,7 +130,6 @@ def load_ignore(
                 f"[{YELLOW}INFO{RESET}] "
                 "No .harbignore found."
             )
-            return None
 
         print(
             f"\n[{CYAN}IGNORE{RESET}] "
@@ -212,15 +225,15 @@ def copy_project(source: Path, destination: Path) -> bool:
     ignore = load_ignore(source)
 
     git_ask_use = input(
-        "\nWant to include .git on the container? "
-        "(I don't recommend including it...) [y/N]: "
+        f"\nWant to include .git on the container? "
+        f"(I don't recommend including it...) [y/N]: "
     ).strip().lower()
 
     include_git = git_ask_use == "y"
 
     print()
     print(f"[{BOLD} MAKE {RESET}] {source}")
-    print("       V")
+    print("     V")
     print(f"[{BOLD} CODE {RESET}] {destination}")
     print(f"[{BOLD} INFO {RESET}] {info_destination}")
     print()

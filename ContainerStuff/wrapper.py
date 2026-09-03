@@ -55,6 +55,107 @@ def get_directory() -> Path:
     return path
 
 
+def compress_harb(container: Path) -> Path:
+    """Compress a folder into a .harb file."""
+
+    container = Path(container).expanduser().resolve()
+
+    if not container.exists():
+        raise FileNotFoundError(
+            f"[{RED}ERROR{RESET}] Container not found: {container}"
+        )
+
+    if not container.is_dir():
+        raise NotADirectoryError(
+            f"[{RED}ERROR{RESET}] Container is not a directory: {container}"
+        )
+
+
+    harb_file = container.parent / f"{container.name}.harb"
+
+    zip_base = container.parent / container.name
+
+    zip_file = Path(
+        shutil.make_archive(
+            str(zip_base),
+            "zip",
+            root_dir=container.parent,
+            base_dir=container.name,
+        )
+    )
+
+    # .zip -> .harb
+    zip_file.rename(harb_file)
+
+    print(
+        f"[{GREEN} OK {RESET}] "
+        f"Container compressed: {harb_file}"
+    )
+
+    return harb_file
+
+
+def decompress_harb(
+    harb_file: Path,
+    output_dir: Optional[Path] = None,
+) -> Path:
+    """Descompress a .harb file into a folder."""
+
+    harb_file = Path(harb_file).expanduser().resolve()
+
+    if not harb_file.exists():
+        raise FileNotFoundError(
+            f"[{RED}ERROR{RESET}] .harb file not found: {harb_file}"
+        )
+
+    if not harb_file.is_file():
+        raise FileNotFoundError(
+            f"[{RED}ERROR{RESET}] Not a file: {harb_file}"
+        )
+
+    if harb_file.suffix.lower() != ".harb":
+        raise ValueError(
+            f"[{RED}ERROR{RESET}] "
+            f"Expected a .harb file: {harb_file}"
+        )
+
+    if output_dir is None:
+        output_dir = harb_file.parent
+
+    output_dir = Path(output_dir).expanduser().resolve()
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # .harb -> .zip
+    zip_file = harb_file.with_suffix(".zip")
+    harb_file.rename(zip_file)
+
+    try:
+        shutil.unpack_archive(
+            str(zip_file),
+            str(output_dir),
+            "zip",
+        )
+
+    finally:
+        # .zip -> .harb
+        if zip_file.exists():
+            zip_file.rename(harb_file)
+
+    container = output_dir / harb_file.stem
+
+    if not container.exists():
+        raise FileNotFoundError(
+            f"[{RED}ERROR{RESET}] "
+            f"Could not find extracted container: {container}"
+        )
+
+    print(
+        f"[{GREEN} OK {RESET}] "
+        f"Container decompressed: {container}"
+    )
+
+    return container
+
 def main_wrapper(path: Optional[Path] = None) -> None:
     """Create a Harbor container for a project directory."""
     project_dir = (
@@ -162,6 +263,8 @@ def main_wrapper(path: Optional[Path] = None) -> None:
             f"[{GREEN} OK {RESET}] "
             f"Encrypted copy created: {output_file}"
         )
+
+    compress_harb(container)
 
     print(
         f"\n[{GREEN} OK {RESET}] "

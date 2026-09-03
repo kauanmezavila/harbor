@@ -2,6 +2,18 @@ import json
 
 from ContainerStuff.dirtrain import main_dirtrain
 
+RESET = "\033[0m"
+BOLD = "\033[1m"
+DIM = "\033[2m"
+
+MAGENTA = "\033[95m"
+CYAN = MAGENTA
+BLUE = MAGENTA
+GREEN = "\033[92m"
+YELLOW = "\033[93m"
+RED = "\033[91m"
+WHITE = "\033[97m"
+GRAY = "\033[90m"
 
 def normalize_list(value):
     """
@@ -89,11 +101,16 @@ def header(path):
     def build_header():
         tree, stack_list = main_dirtrain(path)
 
-        default_project_name = list(tree.keys())[0]
+        if not tree:
+            raise ValueError(
+                "Could not determine the project tree."
+            )
+
+        default_project_name = next(iter(tree))
 
         project_name = (
             input(
-                f"Enter the project name "
+                f"Enter the {MAGENTA}project name{RESET} "
                 f"({default_project_name}): "
             ).strip()
             or default_project_name
@@ -101,7 +118,7 @@ def header(path):
 
         project_version = (
             input(
-                "Enter the project version (1.0.0): "
+                f"Enter the {MAGENTA}project version{RESET} (1.0.0): "
             ).strip()
             or "1.0.0"
         )
@@ -111,8 +128,8 @@ def header(path):
         # -------------------------------------------------
 
         architecture_input = input(
-            "Enter the project architectures "
-            "(comma-separated, e.g. x86_64, arm64): "
+            f"Enter the {MAGENTA}project architectures{RESET} "
+            "(comma-separated, e.g. x86_64, arm64. None = Any): "
         ).strip()
 
         architectures = normalize_list(
@@ -137,8 +154,8 @@ def header(path):
         # -------------------------------------------------
 
         os_input = input(
-            "Enter the supported operating systems "
-            "(comma-separated, e.g. linux, windows): "
+            f"Enter the supported {MAGENTA}operating systems{RESET} "
+            f"(comma-separated, e.g. linux, windows. None = Any): "
         ).strip()
 
         operating_systems = normalize_list(
@@ -164,8 +181,8 @@ def header(path):
 
         while True:
             owner_name = input(
-                "Enter the code owner/maintener name/alias: "
-            ).strip()
+                f"Enter the {MAGENTA}code owner/maintener name/alias{RESET}: "
+            ).strip() or "Unknown"
 
             confirmation = input(
                 f"'{owner_name}' is right?"
@@ -180,9 +197,9 @@ def header(path):
         # -------------------------------------------------
 
         short_description = input(
-            "Write a short description"
+            f"Write a {MAGENTA}short description{RESET} "
             "(press Enter to confirm): "
-        )
+        ).strip()
 
         # -------------------------------------------------
         # Final header
@@ -205,13 +222,28 @@ def header(path):
 
         return (
             final_header,
-            project_name + "-[HARBOR]",
+            project_name
+            + "-"
+            + "-".join(
+                architecture
+                for architecture in (architectures or ["Any"])
+                if architecture is not None
+            )
+            + "-"
+            + "-".join(
+                system
+                for system in (operating_systems or ["Any"])
+                if system is not None
+            )
+            + "-[HARBOR]",
         )
 
     header_data, project_name = build_header()
 
+    header_file = path / "header.json"
+
     with open(
-        "header.json",
+        header_file,
         "w",
         encoding="utf-8",
     ) as f:
@@ -222,6 +254,6 @@ def header(path):
             ensure_ascii=False,
         )
 
-    print("[ OK ] Header created.")
+    print("\n[ OK ] Header created.")
 
     return project_name

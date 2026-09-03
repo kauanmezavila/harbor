@@ -1,214 +1,61 @@
-import os
-import shlex
+import argparse
 from pathlib import Path
-
-try:
-    import readline
-except ImportError:
-    pass
 
 from ContainerStuff.access import restore_container
 from ContainerStuff.compatibility import test_compatibility
 from ContainerStuff.WrapperStuff.hashflux import update_hash
 from ContainerStuff.WrapperStuff.verifyflux import verify
-from ContainerStuff.wrapper import main_wrapper
-
-RESET = "\033[0m"
-BOLD = "\033[1m"
-DIM = "\033[2m"
-
-MAGENTA = "\033[95m"
-CYAN = MAGENTA
-BLUE = MAGENTA
-GREEN = "\033[92m"
-YELLOW = "\033[93m"
-RED = "\033[91m"
-WHITE = "\033[97m"
-GRAY = "\033[90m"
-
-
-def clear():
-    """Clear the terminal using the current platform command."""
-    os.system("cls" if os.name == "nt" else "clear")
-
-
-def banner():
-    """Print the Harbor CLI banner."""
-    print(
-        f"""{MAGENTA}
-======================================<[>>>          {BOLD}{WHITE}>>> HARBOR <<<{RESET}{MAGENTA}       <<<]>======================================{RESET}
-Harbor, 2026, MIT License, {BOLD}v1.0.0{RESET}      {MAGENTA}|{RESET} Client-Center Mode                  {MAGENTA}|{RESET} Developed, deployed, and maintained by
-Light-weight Open Source Docker CLI    {MAGENTA}|{RESET} This is the {BOLD}full suite{RESET}              {MAGENTA}|{RESET} >>>>>>>>>>>>>> {BOLD}{YELLOW}ByKurebo{RESET} <<<<<<<<<<<<<<
-"""
-    )
+from ContainerStuff.wrapper import main_wrapper, decompress_harb
 
 
 def main():
-    """Run the interactive Harbor command line."""
-    banner()
+    parser = argparse.ArgumentParser(description="Harbor commands")
+    subparsers = parser.add_subparsers(dest="command", required=True, help="Sub-command to run")
 
-    while True:
-        cmd = shlex.split(input(f"{BOLD}{CYAN}Harbor{RESET} > ").strip())
-        print("")
-
-        if len(cmd) == 0:
-            continue
-
-        elif cmd[0] == "exit":
-            print(f"{BOLD}{RED}Exiting Harbor...{RESET}")
-            break
-
-        elif cmd[0] == "help":
-            print(
-                fr"""{BOLD}{CYAN}Available commands:{RESET}
-{BOLD}{CYAN}  help{RESET}                   Show this help message
-{BOLD}{CYAN}  exit{RESET}                   Exit Harbor
-{BOLD}{CYAN}  clear{RESET}                  Clear the screen
-
-{BOLD}{CYAN}  wrapper{RESET} <path>         Create a Harbor container
-                             <path> is optional. Defaults to the current directory.
-
-{BOLD}{CYAN}  access{RESET}  <file> <out>   Restore an encrypted container
-                             <file> is required: .bcb file path or name.
-                             <out> is optional. Defaults to the current directory.
-
-{BOLD}{CYAN}  test{RESET}    <path>         Check the compatibility of the project
-                                            with the system                     
-
-{BOLD}{CYAN}  verify{RESET}  <path>         Verify container hashes
-{BOLD}{CYAN}  uphash{RESET}  <path>         Update container hashes
-"""
-            )
-
-        elif cmd[0] == "clear":
-            clear()
-            banner()
-
-        elif cmd[0] == "wrapper":
-            if len(cmd) > 1:
-                main_wrapper(Path(cmd[1]))
-            else:
-                main_wrapper()
-
-        elif cmd[0] == "access":
-            if len(cmd) > 1:
-                bcb_file = Path(cmd[1])
-                output_dir = Path(cmd[2]) if len(cmd) > 2 else Path(".")
-                password = input(f"{BOLD}{CYAN}Enter password for the container: {RESET}")
-                try:
-                    restore_container(bcb_file, password, output_dir)
-                except ValueError as error:
-                    print(error)
-            else:
-                print(
-                    f"[{RED}ERROR{RESET}] Missing required argument: <file> "
-                    "(path to the encrypted container). Type 'help' for usage."
-                )
-
-        elif cmd[0] == "verify":
-            if len(cmd) > 1:
-                verify(Path(cmd[1]))
-            else:
-                print(
-                    f"[{RED}ERROR{RESET}] Missing required argument: <path> "
-                    "(path to the container). Type 'help' for usage."
-                )
-
-        elif cmd[0] == "uphash":
-            if len(cmd) > 1:
-                ask = input("[?] Update container hashes? [y/N]: ").strip().lower()
-
-                if ask == "y":
-                    update_hash(Path(cmd[1]))
-
-                else:
-                    print(f"[{RED}ERROR{RESET}] Action aborted")
-            else:
-                print(
-                    f"[{RED}ERROR{RESET}] Missing required argument: <path> "
-                    "(path to the container). Type 'help' for usage."
-                )
-
-        elif cmd[0] == "test":
-            if len(cmd) > 1:
-                test_compatibility(Path(cmd[1]))
-
-            else:
-                print(
-                    f"[{RED}ERROR{RESET}] Missing required argument: <path> "
-                    "(path to the container). Type 'help' for usage."
-                )
-
-        elif cmd[0] == "hi":
-            print(fr"""{RESET}
-{WHITE}{BOLD}2222222222222222222222222222222222222222222222222222222222222222222222      {WHITE}██{MAGENTA}╗{WHITE}  ██{MAGENTA}╗{WHITE} █████{MAGENTA}╗{WHITE} ██████{MAGENTA}╗{WHITE} ██████{MAGENTA}╗{WHITE}  ██████{MAGENTA}╗{WHITE} ██████{MAGENTA}╗{WHITE} 
-{WHITE}{BOLD}2222222222222222222222222222222222222222222222222222222222222222222222      {WHITE}██{MAGENTA}║{WHITE}  ██{MAGENTA}║{WHITE}██{MAGENTA}╔══{WHITE}██{MAGENTA}╗{WHITE}██{MAGENTA}╔══{WHITE}██{MAGENTA}╗{WHITE}██{MAGENTA}╔══{WHITE}██{MAGENTA}╗{WHITE}██{MAGENTA}╔═══{WHITE}██{MAGENTA}╗{WHITE}██{MAGENTA}╔══{WHITE}██{MAGENTA}╗
-{WHITE}{BOLD}222                                                                222      {WHITE}███████{MAGENTA}║{WHITE}███████{MAGENTA}║{WHITE}██████{MAGENTA}╔╝{WHITE}██████{MAGENTA}╔╝{WHITE}██{MAGENTA}║   {WHITE}██{MAGENTA}║{WHITE}██████{MAGENTA}╔╝
-{WHITE}{BOLD}222                                                                222      {WHITE}██{MAGENTA}╔══{WHITE}██{MAGENTA}║{WHITE}██{MAGENTA}╔══{WHITE}██{MAGENTA}║{WHITE}██{MAGENTA}╔══{WHITE}██{MAGENTA}╗{WHITE}██{MAGENTA}╔══{WHITE}██{MAGENTA}╗{WHITE}██{MAGENTA}║   {WHITE}██{MAGENTA}║{WHITE}██{MAGENTA}╔══{WHITE}██{MAGENTA}╗
-{WHITE}{BOLD}222    {MAGENTA}22222222222   2222222222222222222222222222222222222222222{WHITE}   222      {WHITE}██{MAGENTA}║  {WHITE}██{MAGENTA}║{WHITE}██{MAGENTA}║  {WHITE}██{MAGENTA}║{WHITE}██{MAGENTA}║  {WHITE}██{MAGENTA}║{WHITE}██████{MAGENTA}╔╝╚{WHITE}██████{MAGENTA}╔╝{WHITE}██{MAGENTA}║  {WHITE}██{MAGENTA}║
-{WHITE}{BOLD}222    {MAGENTA}22222222222   2222222222222222222222222222222222222222222{WHITE}   222      {RESET}{MAGENTA}╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝  ╚═════╝ ╚═╝  ╚═╝
-{WHITE}{BOLD}222    {MAGENTA}22222222222   2222222222222222222222222222222222222222222{WHITE}   222
-{WHITE}{BOLD}222    {MAGENTA}22222222222   2222222222222222222222222222222222222222222{WHITE}   222      {RESET} _     _       _     _     __        __   _       _     _   
-{WHITE}{BOLD}222    {MAGENTA}22222222222   2222222222222222222222222222222222222222222{WHITE}   222      {RESET}| |   (_) __ _| |__ | |_   \ \      / /__(_) __ _| |__ | |_ 
-{WHITE}{BOLD}222    {MAGENTA}22222222222   2222222222222222222222222222222222222222222{WHITE}   222      {RESET}| |   | |/ _` | '_ \| __|___\ \ /\ / / _ \ |/ _` | '_ \| __|
-{WHITE}{BOLD}222    {MAGENTA}22222222222                                              {WHITE}   222      {RESET}| |___| | (_| | | | | ||_____\ V  V /  __/ | (_| | | | | |_ _
-{WHITE}{BOLD}222    {MAGENTA}22222222222222222222222{WHITE}   2222222222222222222222222222222   222      {RESET}|_____|_|\__, |_| |_|\__|     \_/\_/ \___|_|\__, |_| |_|\__(_)   
-{WHITE}{BOLD}222    {MAGENTA}22222222222222222222222{WHITE}   2222222222222222222222222222222   222      {RESET}         |___/                              |___/           
-{WHITE}{BOLD}222    {MAGENTA}22222222222222222222222{WHITE}   2222222222222222222222222222222   222       {RESET}___                   ____                           
-{WHITE}{BOLD}222    {MAGENTA}22222222222222222222222{WHITE}   2222222222222222222222222222222   222      {RESET}/ _ \ _ __   ___ _ __ / ___|  ___  _   _ _ __ ___ ___ 
-{WHITE}{BOLD}222    {MAGENTA}22222222222222222222222{WHITE}   2222222222222222222222222222222   222      {RESET}| | | | '_ \ / _ \ '_ \\___ \ / _ \| | | | '__/ __/ _ \
-{WHITE}{BOLD}222    {MAGENTA}22222222222222222222222{WHITE}                     2222222222222   222      {RESET}| |_| | |_) |  __/ | | |___) | (_) | |_| | | | (_|  __/_
-{WHITE}{BOLD}222    {MAGENTA}22222222222222222222222{WHITE}   222222222222222   2222222222222   222      {RESET}\___/ | .__/ \___|_| |_|____/ \___/ \__,_|_|  \___\___(_)
-{WHITE}{BOLD}222    {MAGENTA}22222222222222222222222{WHITE}   222222222222222   2222222222222   222            {RESET}|_|                                              
-{WHITE}{BOLD}222    {MAGENTA}22222222222222222222222{WHITE}   222222222222222   2222222222222   222       {RESET}____             _             
-{WHITE}{BOLD}222                              222222222222222                   222      {RESET}|  _ \  ___   ___| | _____ _ __ 
-{WHITE}{BOLD}222    2222222222   2222222222222222222222222222   {MAGENTA}2222222222222{WHITE}   222      {RESET}| | | |/ _ \ / __| |/ / _ \ '__|
-{WHITE}{BOLD}222    2222222222   2222222222222222222222222222   {MAGENTA}2222222222222{WHITE}   222      {RESET}| |_| | (_) | (__|   <  __/ |_   
-{WHITE}{BOLD}222    2222222222   2222222222222222222222222222   {MAGENTA}2222222222222{WHITE}   222      {RESET}|____/ \___/ \___|_|\_\___|_(_)   
-{WHITE}{BOLD}222    2222222222   2222222222222222222222222222   {MAGENTA}2222222222222{WHITE}   222
-{WHITE}{BOLD}222    2222222222   2222222222222222222222222222   {MAGENTA}2222222222222{WHITE}   222      {RESET}All of it was made by {YELLOW}{BOLD}ByKurebo
-{WHITE}{BOLD}222    2222222222   2222222222222222222222222222   {MAGENTA}2222222222222{WHITE}   222      {RESET}{YELLOW}{BOLD}He{RESET} maintain this too
-{WHITE}{BOLD}222    2222222222   2222222222222222222222222222   {MAGENTA}2222222222222{WHITE}   222      {RESET}But his friend {YELLOW}{BOLD}GPT{RESET} refined and reformated the code :v
-{WHITE}{BOLD}222    2222222222   2222222222222222222222222222   {MAGENTA}2222222222222{WHITE}   222
-{WHITE}{BOLD}222    2222222222   2222222222222222222222222222   {MAGENTA}2222222222222{WHITE}   222      {RESET}'This is more like a project administrator and compatibility suite
-{WHITE}{BOLD}222    2222222222   2222222222222222222222222222   {MAGENTA}2222222222222{WHITE}   222       {RESET}than a real Docker, but it works and i like it' ~ {YELLOW}{BOLD}ByKurebo{RESET}, 2026
-{WHITE}{BOLD}222    2222222222   2222222222222222222222222222   {MAGENTA}2222222222222{WHITE}   222
-{WHITE}{BOLD}222    2222222222   2222222222222222222222222222   {MAGENTA}2222222222222{WHITE}   222
-{WHITE}{BOLD}222    2222222222                                  {MAGENTA}2222222222222{WHITE}   222
-{WHITE}{BOLD}222    2222222222   {MAGENTA}2222222222   2222222222222222222222222222222{WHITE}   222
-{WHITE}{BOLD}222    2222222222   {MAGENTA}2222222222   2222222222222222222222222222222{WHITE}   222
-{WHITE}{BOLD}222    2222222222   {MAGENTA}2222222222   2222222222222222222222222222222{WHITE}   222
-{WHITE}{BOLD}222    2222222222   {MAGENTA}2222222222   2222222222222222222222222222222{WHITE}   222
-{WHITE}{BOLD}222    2222222222   {MAGENTA}2222222222   2222222222222222222222222222222{WHITE}   222
-{WHITE}{BOLD}222    2222222222   {MAGENTA}2222222222   2222222222222222222222222222222{WHITE}   222
-{WHITE}{BOLD}222                 {MAGENTA}2222222222{WHITE}                                     222
-{WHITE}{BOLD}222    {MAGENTA}2222222222222222222222222222222222222222{WHITE}    2222222222222   222
-{WHITE}{BOLD}222    {MAGENTA}2222222222222222222222222222222222222222{WHITE}    2222222222222   222
-{WHITE}{BOLD}222    {MAGENTA}2222222222222222222222222222222222222222{WHITE}    2222222222222   222
-{WHITE}{BOLD}222    {MAGENTA}2222222222222222222222222222222222222222{WHITE}    2222222222222   222
-{WHITE}{BOLD}222    {MAGENTA}2222222222222222222222222222222222222222{WHITE}    2222222222222   222
-{WHITE}{BOLD}222    {MAGENTA}2222222222222222222222222222222222222222{WHITE}    2222222222222   222
-{WHITE}{BOLD}222    {MAGENTA}2222222222222222222222222222222222222222{WHITE}    2222222222222   222
-{WHITE}{BOLD}222    {MAGENTA}2222222222222222222222222222222222222222{WHITE}    2222222222222   222
-{WHITE}{BOLD}222                                                2222222222222   222
-{WHITE}{BOLD}222    222222222222222222222  2222222222222222222222222222222222   222
-{WHITE}{BOLD}222    222222222222222222222  2222222222222222222222222222222222   222
-{WHITE}{BOLD}222    222222222222222222222  2222222222222222222222222222222222   222
-{WHITE}{BOLD}222    222222222222222222222  2222222222222222222222222222222222   222
-{WHITE}{BOLD}222    222222222222222222222  2222222222222222222222222222222222   222
-{WHITE}{BOLD}222    222222222222222222222  2222222222222222222222222222222222   222
-{WHITE}{BOLD}222    222222222222222222222  2222222222222222222222222222222222   222
-{WHITE}{BOLD}222                                                                222
-{WHITE}{BOLD}222                                                                222
-{WHITE}{BOLD}2222222222222222222222222222222222222222222222222222222222222222222222
-{WHITE}{BOLD}2222222222222222222222222222222222222222222222222222222222222222222222
-""")
-
-        else:
-            print(
-                f"[{RED}ERROR{RESET}] Unknown command: {cmd[0]}. "
-                "Type 'help' for a list of commands."
-            )
+    compatibility = subparsers.add_parser("compatibility", help="Test compatibility of the project directory")
+    compatibility.add_argument("path", type=Path, help="Path to the project directory (default: current directory).")
 
 
-main()
+    verify_parser = subparsers.add_parser("verify", help="Verify the integrity of the project directory")
+    verify_parser.add_argument("path", type=Path, help="Path to the project directory (default: current directory).")
+
+
+    hash_parser = subparsers.add_parser("uphash", help="Update the hash of the project directory")
+    hash_parser.add_argument("path", type=Path, help="Path to the project directory (default: current directory).")
+
+
+    restore = subparsers.add_parser("restore", help="Restore a container from a .harb file")
+    restore.add_argument("file", type=Path, help="Path to the .harb file to restore.")
+    restore.add_argument("--out", type=Path, default=Path("."), help="Output directory for the restored container (default: current directory).")
+    restore.add_argument("--password", required=True, help="Password for decrypting the container.")
+
+
+    wrapper = subparsers.add_parser("wrapper", help="Wrapper command for the project directory")
+    wrapper.add_argument("path", type=Path, default=Path("."), help="Path to the project directory (default: current directory).")
+
+    inflate = subparsers.add_parser("inflate", help="Inflate a container from a .harb file")
+    inflate.add_argument("file", type=Path, help="Path to the .harb file to inflate.")
+    inflate.add_argument("--out", type=Path, default=Path("."), help="Output directory for the inflated container (default: current directory).")
+
+    args = parser.parse_args()
+
+    if args.command == "compatibility":
+        test_compatibility(args.path)
+
+    elif args.command == "verify":
+        verify(args.path)
+
+    elif args.command == "uphash":
+        update_hash(args.path)
+
+    elif args.command == "restore":
+        restore_container(args.file, args.password, args.out)
+
+    elif args.command == "wrapper":
+        main_wrapper(args.path)
+
+    elif args.command == "inflate":
+        decompress_harb(args.file, args.out)
+
+if __name__ == "__main__":
+    main()
