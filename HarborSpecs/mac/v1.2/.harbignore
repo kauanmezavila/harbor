@@ -1,0 +1,12 @@
+.git/
+__pycache__/
+.venv/
+venv/
+*.pyc
+*.log
+.DS_Store
+dist/
+build/
+reports/
+*.harb
+*_encrypted.bcb

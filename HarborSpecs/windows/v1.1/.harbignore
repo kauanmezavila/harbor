@@ -1,0 +1,12 @@
+.git/
+__pycache__/
+.venv/
+venv/
+*.pyc
+*.log
+Thumbs.db
+dist/
+build/
+data/local/
+*.harb
+*_encrypted.bcb
