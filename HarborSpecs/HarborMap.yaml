@@ -1,0 +1,24 @@
+any:
+  - name: StarChartJournal
+    os: Any
+    architecture: Any
+    stack: python>=3.11
+linux:
+  - name: ForgeTelemetry
+    os: linux
+    architecture: x86_64
+    stack: python>=3.11
+  - name: GreenhouseNode
+    os: linux
+    architecture: arm64
+    stack: python>=3.11
+mac:
+  - name: PaletteDesk
+    os: macos
+    architecture: x86_64
+    stack: node>=22
+windows:
+  - name: SignalKiosk
+    os: windows
+    architecture: x86_64
+    stack: python>=3.11
