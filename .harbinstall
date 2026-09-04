@@ -1,0 +1,8 @@
+# That's an exemple of .harbinstall, probaly this will run like an .sh/.bat but just LINE BY LINE
+# .harbinstall for Linux Mint, for example
+
+hrb:> shell-mode on
+hrb:> err-break on
+
+echo Starting the Harbor installation, please wait...
+sudo apt install pipx

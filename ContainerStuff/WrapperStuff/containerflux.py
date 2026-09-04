@@ -130,6 +130,7 @@ def load_ignore(
                 f"[{YELLOW}INFO{RESET}] "
                 "No .harbignore found."
             )
+            return None
 
         print(
             f"\n[{CYAN}IGNORE{RESET}] "
@@ -185,6 +186,7 @@ def copy_project(source: Path, destination: Path) -> bool:
         "header.json",
         "tree.json",
         ".harbignore",
+        ".harbinstall"
     }
 
     if not source.exists():

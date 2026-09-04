@@ -33,6 +33,7 @@ Harbor is not Docker. It is closer to a project packager, verifier, and compatib
 - `uphash`: recalculate container hashes after intentional changes.
 - `compatibility`: check the current OS, architecture, and runtimes against container metadata.
 - `.harbignore` support with gitwildmatch-style rules.
+- `install`: runs an `.harbinstall`, a installing script
 - Stack detection for Python, Node.js, Go, Rust, Java, Docker, React, Vue, and more.
 
 ## Install
@@ -40,13 +41,20 @@ Harbor is not Docker. It is closer to a project packager, verifier, and compatib
 ```bash
 git clone https://github.com/kauanmezavila/harbor.git
 cd Harbor
-python -m pip install pathspec cryptography
 ```
+
+Now choose the most adequate method:
+```bash
+pip install .
+python -m pip install .
+pipx install .
+```
+(Note: we use pyproject.toml to habilite the global command)
 
 ## Usage
 
 ```bash
-python main.py <command> <args>
+harbor <command> <args>
 ```
 
 ```text
@@ -57,17 +65,20 @@ Commands:
   verify <path>                             Verify container hashes
   uphash <path>                             Recalculate container hashes
   compatibility <path>                      Check container compatibility
+  install <path>                            Path to the project directory, ALWAYS BY THE ROOT DIR (default: current directory).
 ```
 
 Examples:
 
 ```bash
-python main.py wrapper ./MyApp
-python main.py inflate "./MyApp-Any-Any-[HARBOR].harb" --out ./restored
-python main.py restore "./MyApp-Any-Any-[HARBOR]_encrypted.bcb" --password "secret" --out ./restored
-python main.py verify "./MyApp-Any-Any-[HARBOR]"
-python main.py compatibility "./MyApp-Any-Any-[HARBOR]"
+harbor wrapper MyApp
+harbor inflate "MyApp-Any-Any-[HARBOR].harb" --out ./restored
+harbor restore "MyApp-Any-Any-[HARBOR]_encrypted.bcb" --password "secret" --out ./restored
+harbor verify "MyApp-Any-Any-[HARBOR]"
+harbor compatibility "MyApp-Any-Any-[HARBOR]"
+harbor install "MyApp-Any-Any-[HARBOR]"
 ```
+Note: for security reasons, install will may only run .harbinstall when runned in the project root dir
 
 ## Container Output
 
@@ -76,7 +87,7 @@ For a project named `MyApp`, Harbor creates:
 ```text
 MyApp-Any-Any-[HARBOR]/
 ├── Code/             copied project files
-├── Info/             header.json, tree.json, .harbignore
+├── Info/             header.json, tree.json, .harbignore, .harbinstall
 └── .hash.txt         root integrity hash
 ```
 
@@ -96,7 +107,7 @@ The `Any-Any` part changes when you set specific architectures or operating syst
 
 ## Ignore Rules
 
-Add a `.harbignore` file to the project root to exclude files or folders from the container.
+Add a `.harbignore` file to the project root to exclude files or folders from the container. Just like an .gitignore
 
 Example:
 
@@ -107,6 +118,21 @@ node_modules/
 *.log
 ```
 
+## .harbinstall
+
+In 1.2.1 we now have the amazing .harbinstall: an file that helps the installation using subprocess.
+
+To be able to run you need:
+- 1: Create the installation file just like an .sh/.bat (Remebers it runs LINE by LINE)
+- 2: Add one of the index `hrb:> ` and HARB-IMG commands if you want!:
+```bash
+shell-mode  : run commands with the shell or subprocess list [Starts on 'True']
+output      : capture the output [Starts on 'False']
+err-break   : determinates if the HARB-IMG needs to stop or not if an error occurs [Starts on 'False']
+usr-log     : shows the logs of HARB-IMG for the user [Starts on 'True']
+```
+Note: if you not write an .harbinstall on the root dir, Harbo will push an empty one on the container Info folder
+
 ## Security Note
 
 Encrypted `.bcb` exports use AES-GCM through the `cryptography` package. Use them for packaging and controlled sharing, not as a replacement for a full audited production security process.
@@ -115,22 +141,37 @@ Encrypted `.bcb` exports use AES-GCM through the `cryptography` package. Use the
 
 ```text
 .
-├── main.py                           Harbor command dispatcher
-├── imgs/                             project artwork
-└── ContainerStuff/
-    ├── access.py                     restore encrypted .bcb exports
-    ├── compatibility.py              OS, architecture, and runtime checks
-    ├── dirtrain.py                   tree scan and stack detection
-    ├── header.py                     metadata header generation
-    ├── stack.py                      known stack definitions
-    ├── wrapper.py                    wrapper, .harb compression, and inflation flow
-    ├── WrapperStuff/
-    │   ├── containerflux.py          copy files and apply .harbignore
-    │   ├── hashflux.py               hash creation and refresh
-    │   └── verifyflux.py             hash verification
-    └── Obsidian/BaseSystem/
-        ├── crypto.py                 Harbor cipher functions
-        └── main.py                   base crypto flow
+├── ContainerStuff          
+│   ├── access.py
+│   ├── compatibility.py
+│   ├── dirtrain.py
+│   ├── header.py
+│   ├── Obsidian
+│   │   └── BaseSystem
+│   │       ├── crypto.py
+│   │       ├── hasher.py
+│   │       └── main.py
+│   ├── runinstall.py
+│   ├── stack.py
+│   ├── wrapper.py
+│   └── WrapperStuff
+│       ├── containerflux.py
+│       ├── hashflux.py
+│       └── verifyflux.py
+├── Dumpster
+│   ├── main-cli.py
+│   └── README.md
+├── imgs
+│   ├── Harbor2.png
+│   ├── HarborBanner.png
+│   └── Harbor.png
+├── main.py
+├── OfficeStuff
+├── pyproject.toml
+├── README.md
+├── README.pt-BR.md
+├── requirements.txt
+└── UPDATES.md
 ```
 
 ## License

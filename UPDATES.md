@@ -6,6 +6,14 @@ I will add the, probably, main feature: the download and Github integration
 
 # Updates
 
+## v1.2.1
+
+Harbor now is installer by pyproject.toml and can be used globaly
+
+.harbinstall was created
+
+Fixed and bug on .harignore and fixed the missing cryptography module on requirement.txt
+
 ## v1.2.0
 
 Harbor now has a cleaner command-based CLI and a complete container flow:
