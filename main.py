@@ -38,8 +38,8 @@ def main():
     inflate.add_argument("file", type=Path, help="Path to the .harb file to inflate.")
     inflate.add_argument("--out", type=Path, default=Path("."), help="Output directory for the inflated container (default: current directory).")
 
-    install = subparsers.add_parser("install", help="Run the .harbinstall script in the project directory")
-    install.add_argument("path", type=Path, default=Path("."), help="Path to the project directory, ALWAYS BY THE ROOT DIR (default: current directory).")
+    run = subparsers.add_parser("install", help="Run the .harbinstall script in the project directory")
+    run.add_argument("path", type=Path, default=Path("."), help="Path to the project directory, ALWAYS BY THE ROOT DIR (default: current directory).")
 
     args = parser.parse_args()
 
@@ -61,7 +61,7 @@ def main():
     elif args.command == "inflate":
         decompress_harb(args.file, args.out)
 
-    elif args.command == "install":
+    elif args.command == "run":
         run_line()
 
 if __name__ == "__main__":

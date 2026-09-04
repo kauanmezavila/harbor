@@ -32,7 +32,7 @@ Harbor não é Docker. Ele é mais próximo de um empacotador, verificador e ass
 - `verify`: valida a árvore recursiva de integridade `.hash.txt`.
 - `uphash`: recalcula os hashes do container após mudanças intencionais.
 - `compatibility`: checa o sistema operacional, a arquitetura e os runtimes atuais contra os metadados do container.
-- `install`: roda um .harbinstall, um script de instalação
+- `run`: roda um .harbinstall, um script de instalação
 - Suporte a `.harbignore` com regras no estilo gitwildmatch.
 - Detecção de stacks como Python, Node.js, Go, Rust, Java, Docker, React, Vue e mais.
 
@@ -67,7 +67,7 @@ Comandos:
   verify <path>                             Verifica os hashes do container
   uphash <path>                             Recalcula os hashes do container
   compatibility <path>                      Checa a compatibilidade do container
-  install <path>                            Caminho para o diretório do projeto, sempre pela raiz (padrão: diretório atual).
+  run <path>                                Roda o .harbinstall
 ```
 
 Exemplos:

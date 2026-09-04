@@ -33,7 +33,7 @@ Harbor is not Docker. It is closer to a project packager, verifier, and compatib
 - `uphash`: recalculate container hashes after intentional changes.
 - `compatibility`: check the current OS, architecture, and runtimes against container metadata.
 - `.harbignore` support with gitwildmatch-style rules.
-- `install`: runs an `.harbinstall`, a installing script
+- `run`: runs an `.harbinstall`, a installing script
 - Stack detection for Python, Node.js, Go, Rust, Java, Docker, React, Vue, and more.
 
 ## Install
@@ -65,7 +65,7 @@ Commands:
   verify <path>                             Verify container hashes
   uphash <path>                             Recalculate container hashes
   compatibility <path>                      Check container compatibility
-  install <path>                            Path to the project directory, ALWAYS BY THE ROOT DIR (default: current directory).
+  run <path>                                Runs the .harbinstall
 ```
 
 Examples:
