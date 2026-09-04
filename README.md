@@ -76,9 +76,9 @@ harbor inflate "MyApp-Any-Any-[HARBOR].harb" --out ./restored
 harbor restore "MyApp-Any-Any-[HARBOR]_encrypted.bcb" --password "secret" --out ./restored
 harbor verify "MyApp-Any-Any-[HARBOR]"
 harbor compatibility "MyApp-Any-Any-[HARBOR]"
-harbor install "MyApp-Any-Any-[HARBOR]"
+harbor run "MyApp-Any-Any-[HARBOR]"
 ```
-Note: for security reasons, install will may only run .harbinstall when runned in the project root dir
+Note: for security reasons, run will may only run .harbinstall when runned in the project root dir
 
 ## Container Output
 
