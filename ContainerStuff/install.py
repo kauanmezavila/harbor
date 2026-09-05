@@ -975,6 +975,8 @@ def install_project(
     target_branch: str | None = None,
 ) -> int:
 
+    print(f"{BOLD}{MAGENTA}===== {WHITE}Harbor Installer{MAGENTA} ====={RESET}\n")
+
     try:
         # ----------------------------------------------------
         # Repository / version

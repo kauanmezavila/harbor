@@ -4,7 +4,7 @@ STACKS = {
     "extensions": {
         ".py": {
             "stack": "Python",
-            "runtime": "python>=3.13",
+            "runtime": "python>=3.12",
             "package_managers": ["pip", "poetry", "uv"],
             "detectors": [
                 "requirements.txt",
