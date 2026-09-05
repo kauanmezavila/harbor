@@ -8,7 +8,10 @@ Harbor install was created
 
 HarborSpecs/ and HarborMap.yaml created
 
+Used Black to reformat the code
+
 - `install` Install a project from GitHub
+
 
 ## v1.2.1
 

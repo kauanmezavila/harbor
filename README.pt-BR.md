@@ -132,7 +132,7 @@ Na versão 1.3.0, adicionamos o `HarborSpecs`, uma pasta na raiz do projeto.
 Nessa pasta você coloca a pasta do sistema operacional, depois da versão.
 
 Um exemplo:
-
+```text
 .
 ├── ContainerStuff
 │   ├── access.py
@@ -184,6 +184,7 @@ Um exemplo:
 ├── README.pt-BR.md
 ├── requirements.txt
 └── UPDATES.md
+```
 
 A única coisa que você realmente precisa seguir aqui é deixar a pasta `HarborSpecs` na raiz do projeto, depois as fontes.
 
