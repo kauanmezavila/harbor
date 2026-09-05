@@ -132,7 +132,7 @@ In 1.3.0 we added the HarborSpecs, a folder in your project root directory.
 In this folder you will put the OS folder, after the version.
 
 An example:
-
+```text
 .
 ├── ContainerStuff
 │   ├── access.py
@@ -184,6 +184,7 @@ An example:
 ├── README.pt-BR.md
 ├── requirements.txt
 └── UPDATES.md
+```
 
 The only thing here that you actually needs to follow is the folder HarborSpecs be in the root directory and after, the sources
 
