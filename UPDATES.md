@@ -1,10 +1,14 @@
 # Upcoming!
 
+# Updates
+
 ## v1.3.0
 
-I will add the, probably, main feature: the download and Github integration
+Harbor install was created
 
-# Updates
+HarborSpecs/ and HarborMap.yaml created
+
+- `install` Install a project from GitHub
 
 ## v1.2.1
 

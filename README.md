@@ -5,7 +5,7 @@
 <h1 align="center">Harbor</h1>
 
 <p align="center">
-  A lightweight open-source CLI for packaging projects into portable Harbor containers with metadata, compatibility checks, integrity hashes, and optional encrypted exports.
+  A lightweight open-source system that helps developers distribute code and users to download the most compatible by packaging projects into portable Harbor containers with metadata, compatibility checks, integrity hashes, and optional encrypted exports.
 </p>
 
 <p align="center">
@@ -18,9 +18,13 @@
 
 ## What is Harbor?
 
-Harbor turns a project folder into a portable container-like package.
+Harbor helps developers distribute code and users to download the most compatible
 
 It scans the project tree, detects known stacks, writes metadata, copies code into a clean `Code/` area, stores root files in `Info/`, creates recursive SHA-256 integrity hashes, compresses the result as a `.harb` file, and can also create a password-encrypted `.bcb` export.
+
+Then, the dev can make an HarborSpecs folder with the sources and a HarborMap.yaml that tells the system where to find the right source for the system.
+
+After this, anyone with the harbor CLI can download the most compatible (or other) version in the default or other branch.
 
 Harbor is not Docker. It is closer to a project packager, verifier, and compatibility assistant.
 
@@ -33,7 +37,8 @@ Harbor is not Docker. It is closer to a project packager, verifier, and compatib
 - `uphash`: recalculate container hashes after intentional changes.
 - `compatibility`: check the current OS, architecture, and runtimes against container metadata.
 - `.harbignore` support with gitwildmatch-style rules.
-- `run`: runs an `.harbinstall`, a installing script
+- `run`: runs an `.harbinstall`, a installing script.
+- `install`: Install a project from GitHub.
 - Stack detection for Python, Node.js, Go, Rust, Java, Docker, React, Vue, and more.
 
 ## Install
@@ -47,7 +52,7 @@ Now choose the most adequate method:
 ```bash
 pip install .
 python -m pip install .
-pipx install .
+pipx install .            <--- i HIGHLY recommend this one
 ```
 (Note: we use pyproject.toml to habilite the global command)
 
@@ -66,6 +71,7 @@ Commands:
   uphash <path>                             Recalculate container hashes
   compatibility <path>                      Check container compatibility
   run <path>                                Runs the .harbinstall
+  install <username/repo@version> <args>    Install a project from GitHub
 ```
 
 Examples:
@@ -77,6 +83,7 @@ harbor restore "MyApp-Any-Any-[HARBOR]_encrypted.bcb" --password "secret" --out 
 harbor verify "MyApp-Any-Any-[HARBOR]"
 harbor compatibility "MyApp-Any-Any-[HARBOR]"
 harbor run "MyApp-Any-Any-[HARBOR]"
+harbor install linus/myapp@latest --branch master
 ```
 Note: for security reasons, `run` will may only run `.harbinstall` when runned in the project root dir
 
@@ -105,6 +112,7 @@ MyApp-Any-Any-[HARBOR]_encrypted.bcb
 
 The `Any-Any` part changes when you set specific architectures or operating systems during wrapping.
 
+
 ## Ignore Rules
 
 Add a `.harbignore` file to the project root to exclude files or folders from the container. Just like an .gitignore
@@ -117,6 +125,135 @@ __pycache__/
 node_modules/
 *.log
 ```
+
+## HarborSpecs
+
+In 1.3.0 we added the HarborSpecs, a folder in your project root directory.
+In this folder you will put the OS folder, after the version.
+
+An example:
+
+.
+├── ContainerStuff
+│   ├── access.py
+│   ├── compatibility.py
+│   ├── dirtrain.py
+│   ├── header.py
+│   ├── install.py
+│   ├── Obsidian
+│   │   └── BaseSystem
+│   │       ├── crypto.py
+│   │       ├── hasher.py
+│   │       └── main.py
+│   ├── runinstall.py
+│   ├── stack.py
+│   ├── wrapper.py
+│   └── WrapperStuff
+│       ├── containerflux.py
+│       ├── hashflux.py
+│       └── verifyflux.py
+|
+├── HarborSpecs                                                <--- Here is HarborSpecs folder
+|   ├── HarborMap.yaml                                         <--- Here is the HarborMap file
+│   ├── any                                                    <--- In "Any" you put the code that run in ANY OS
+│   │   ├── v1.1                                               <--- The version
+│   │   │   └── HarborBeacon-Any-Any-[HARBOR].harb             <--- The code source
+│   │   └── v1.2
+│   │       └── HarborBeacon-Any-Any-[HARBOR].harb
+│   ├── linux
+│   │   ├── v1.0
+│   │   │   └── HarborBeacon-x86_64-linux-[HARBOR].harb
+│   │   ├── v1.1
+│   │   │   └── HarborBeacon-arm64-linux-[HARBOR].harb
+│   │   └── v1.2
+│   │       └── HarborBeacon-x86_64-arm64-linux-[HARBOR].harb
+│   ├── mac
+│   │   └── v1.2
+│   │       └── HarborBeacon-arm64-macos-[HARBOR].harb
+│   └── windows
+│       └── v1.1
+│           └── HarborBeacon-x86_64-windows-[HARBOR].harb
+├── imgs
+│   ├── Harbor2.png
+│   ├── HarborBanner.png
+│   └── Harbor.png
+├── main.py
+├── OfficeStuff
+├── pyproject.toml
+├── README.md
+├── README.pt-BR.md
+├── requirements.txt
+└── UPDATES.md
+
+The only thing here that you actually needs to follow is the folder HarborSpecs be in the root directory and after, the sources
+
+## HarborMap.yaml
+
+This is the HEART of harbor install, in there you can configure some things that will guide the system.
+
+What you NEED to follow to construct:
+- Names like:
+  - project
+  - description
+  - variants
+  - path
+  - version
+  - os
+  - architecture
+  - runtime
+- Indentation
+
+An example, if you follow it, your users will have an amazing experience:
+```yaml
+project: HarborBeacon                                                                        # The project name shown on install menu                                  
+description: Same fictional project packaged as HarborSpecs variants by OS, architecture, and version. # The project descritption shown on install menu
+
+variants:                                                           # A list of source variants 'objects'
+  - path: any/v1.1/HarborBeacon-Any-Any-[HARBOR].harb               # THE PATH, this is VERY IMPORTANT, consider the path after HarborSpecs
+    version: 1.1.0                                                  # Important for the filter
+    os: Any                                                         # Important for the filter too
+    architecture: Any                                               # Same
+    runtime: python>=3.12                                           # Not very important, but is good for the filter
+
+  - path: any/v1.2/HarborBeacon-Any-Any-[HARBOR].harb
+    version: 1.2.0
+    os: Any
+    architecture: Any
+    runtime: python>=3.12
+
+  - path: linux/v1.0/HarborBeacon-x86_64-linux-[HARBOR].harb
+    version: 1.0.0
+    os: linux
+    architecture: x86_64
+    runtime: python>=3.12
+
+  - path: linux/v1.1/HarborBeacon-arm64-linux-[HARBOR].harb
+    version: 1.1.0
+    os: linux
+    architecture: arm64
+    runtime: python>=3.12
+
+  - path: linux/v1.2/HarborBeacon-x86_64-arm64-linux-[HARBOR].harb
+    version: 1.2.0
+    os: linux
+    architecture: x86_64, arm64
+    runtime: python>=3.12
+
+  - path: mac/v1.2/HarborBeacon-arm64-macos-[HARBOR].harb
+    version: 1.2.0
+    os: macos
+    architecture: arm64
+    runtime: python>=3.12
+
+  - path: windows/v1.1/HarborBeacon-x86_64-windows-[HARBOR].harb
+    version: 1.1.0
+    os: windows
+    architecture: x86_64
+    runtime: python>=3.12
+```
+
+If you specify the path good, you can organize HarborSpecs in a lots of ways
+(For real, ANY way is valid, the only important thing is the HarborMap.yaml having all the nescessary infos)
 
 ## .harbinstall
 
@@ -141,11 +278,12 @@ Encrypted `.bcb` exports use AES-GCM through the `cryptography` package. Use the
 
 ```text
 .
-├── ContainerStuff          
+├── ContainerStuff
 │   ├── access.py
 │   ├── compatibility.py
 │   ├── dirtrain.py
 │   ├── header.py
+│   ├── install.py
 │   ├── Obsidian
 │   │   └── BaseSystem
 │   │       ├── crypto.py
@@ -161,6 +299,26 @@ Encrypted `.bcb` exports use AES-GCM through the `cryptography` package. Use the
 ├── Dumpster
 │   ├── main-cli.py
 │   └── README.md
+├── HarborSpecs
+│   ├── any
+│   │   ├── v1.1
+│   │   │   └── HarborBeacon-Any-Any-[HARBOR].harb
+│   │   └── v1.2
+│   │       └── HarborBeacon-Any-Any-[HARBOR].harb
+│   ├── HarborMap.yaml
+│   ├── linux
+│   │   ├── v1.0
+│   │   │   └── HarborBeacon-x86_64-linux-[HARBOR].harb
+│   │   ├── v1.1
+│   │   │   └── HarborBeacon-arm64-linux-[HARBOR].harb
+│   │   └── v1.2
+│   │       └── HarborBeacon-x86_64-arm64-linux-[HARBOR].harb
+│   ├── mac
+│   │   └── v1.2
+│   │       └── HarborBeacon-arm64-macos-[HARBOR].harb
+│   └── windows
+│       └── v1.1
+│           └── HarborBeacon-x86_64-windows-[HARBOR].harb
 ├── imgs
 │   ├── Harbor2.png
 │   ├── HarborBanner.png

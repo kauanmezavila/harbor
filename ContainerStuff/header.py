@@ -15,6 +15,7 @@ RED = "\033[91m"
 WHITE = "\033[97m"
 GRAY = "\033[90m"
 
+
 def normalize_list(value):
     """
     Convert comma-separated input into a normalized list.
@@ -27,11 +28,7 @@ def normalize_list(value):
     if not value:
         return None
 
-    values = [
-        item.strip()
-        for item in value.split(",")
-        if item.strip()
-    ]
+    values = [item.strip() for item in value.split(",") if item.strip()]
 
     return values or None
 
@@ -46,14 +43,11 @@ def normalize_architecture(architecture):
         "amd64": "x86_64",
         "x86-64": "x86_64",
         "x86_64": "x86_64",
-
         "aarch64": "arm64",
         "arm64": "arm64",
-
         "x86": "x86",
         "i386": "x86",
         "i686": "x86",
-
         "arm": "arm",
         "arm32": "arm",
     }
@@ -74,16 +68,13 @@ def normalize_os(system):
     aliases = {
         "linux": "linux",
         "gnu/linux": "linux",
-
         "windows": "windows",
         "win": "windows",
         "win32": "windows",
         "win64": "windows",
-
         "mac": "macos",
         "macos": "macos",
         "osx": "macos",
-
         "freebsd": "freebsd",
     }
 
@@ -102,24 +93,19 @@ def header(path):
         tree, stack_list = main_dirtrain(path)
 
         if not tree:
-            raise ValueError(
-                "Could not determine the project tree."
-            )
+            raise ValueError("Could not determine the project tree.")
 
         default_project_name = next(iter(tree))
 
         project_name = (
             input(
-                f"Enter the {MAGENTA}project name{RESET} "
-                f"({default_project_name}): "
+                f"Enter the {MAGENTA}project name{RESET} ({default_project_name}): "
             ).strip()
             or default_project_name
         )
 
         project_version = (
-            input(
-                f"Enter the {MAGENTA}project version{RESET} (1.0.0): "
-            ).strip()
+            input(f"Enter the {MAGENTA}project version{RESET} (1.0.0): ").strip()
             or "1.0.0"
         )
 
@@ -132,22 +118,15 @@ def header(path):
             "(comma-separated, e.g. x86_64, arm64. None = Any): "
         ).strip()
 
-        architectures = normalize_list(
-            architecture_input
-        )
+        architectures = normalize_list(architecture_input)
 
         if architectures:
             architectures = [
-                normalize_architecture(
-                    architecture
-                )
-                for architecture in architectures
+                normalize_architecture(architecture) for architecture in architectures
             ]
 
             # Remove duplicates while preserving order.
-            architectures = list(
-                dict.fromkeys(architectures)
-            )
+            architectures = list(dict.fromkeys(architectures))
 
         # -------------------------------------------------
         # Operating systems
@@ -158,36 +137,27 @@ def header(path):
             f"(comma-separated, e.g. linux, windows. None = Any): "
         ).strip()
 
-        operating_systems = normalize_list(
-            os_input
-        )
+        operating_systems = normalize_list(os_input)
 
         if operating_systems:
-            operating_systems = [
-                normalize_os(
-                    system
-                )
-                for system in operating_systems
-            ]
+            operating_systems = [normalize_os(system) for system in operating_systems]
 
             # Remove duplicates while preserving order.
-            operating_systems = list(
-                dict.fromkeys(operating_systems)
-            )
+            operating_systems = list(dict.fromkeys(operating_systems))
 
         # -------------------------------------------------
         # Owners name
         # -------------------------------------------------
 
         while True:
-            owner_name = input(
-                f"Enter the {MAGENTA}code owner/maintener name/alias{RESET}: "
-            ).strip() or "Unknown"
+            owner_name = (
+                input(
+                    f"Enter the {MAGENTA}code owner/maintener name/alias{RESET}: "
+                ).strip()
+                or "Unknown"
+            )
 
-            confirmation = input(
-                f"'{owner_name}' is right?"
-                " [y/n]: "
-            ).strip().lower()
+            confirmation = input(f"'{owner_name}' is right? [y/n]: ").strip().lower()
 
             if confirmation == "y":
                 break
@@ -197,8 +167,7 @@ def header(path):
         # -------------------------------------------------
 
         short_description = input(
-            f"Write a {MAGENTA}short description{RESET} "
-            "(press Enter to confirm): "
+            f"Write a {MAGENTA}short description{RESET} (press Enter to confirm): "
         ).strip()
 
         # -------------------------------------------------
@@ -210,12 +179,10 @@ def header(path):
             "PROJECT DESCRIPTION": short_description,
             "PROJECT VERSION": project_version,
             "PROJECT OWNER": owner_name,
-
             "COMPATIBILITY": {
                 "ARCHITECTURES": architectures,
                 "OS": operating_systems,
             },
-
             "PROJECT STACKS": stack_list,
             "PROJECT TREE": tree,
         }

@@ -1,16 +1,14 @@
 import argparse
 import shutil
 from pathlib import Path
-from typing import Optional
 
 from ContainerStuff.header import header
 from ContainerStuff.Obsidian.BaseSystem.crypto import (
-    BCB_Cryptography_bytes_passwd,
     BCB_bytes_text,
+    BCB_Cryptography_bytes_passwd,
 )
 from ContainerStuff.WrapperStuff.containerflux import copy_project, create_container
 from ContainerStuff.WrapperStuff.hashflux import hash_folder
-
 
 RESET = "\033[0m"
 BOLD = "\033[1m"
@@ -30,9 +28,7 @@ HASH_FILE = ".hash.txt"
 
 def get_directory() -> Path:
     """Read and validate the project directory from CLI arguments."""
-    parser = argparse.ArgumentParser(
-        description="Analyse a project path."
-    )
+    parser = argparse.ArgumentParser(description="Analyse a project path.")
 
     parser.add_argument(
         "directory",
@@ -61,15 +57,12 @@ def compress_harb(container: Path) -> Path:
     container = Path(container).expanduser().resolve()
 
     if not container.exists():
-        raise FileNotFoundError(
-            f"[{RED}ERROR{RESET}] Container not found: {container}"
-        )
+        raise FileNotFoundError(f"[{RED}ERROR{RESET}] Container not found: {container}")
 
     if not container.is_dir():
         raise NotADirectoryError(
             f"[{RED}ERROR{RESET}] Container is not a directory: {container}"
         )
-
 
     harb_file = container.parent / f"{container.name}.harb"
 
@@ -87,17 +80,14 @@ def compress_harb(container: Path) -> Path:
     # .zip -> .harb
     zip_file.rename(harb_file)
 
-    print(
-        f"[{GREEN} OK {RESET}] "
-        f"Container compressed: {harb_file}"
-    )
+    print(f"[{GREEN} OK {RESET}] Container compressed: {harb_file}")
 
     return harb_file
 
 
 def decompress_harb(
     harb_file: Path,
-    output_dir: Optional[Path] = None,
+    output_dir: Path | None = None,
 ) -> Path:
     """Descompress a .harb file into a folder."""
 
@@ -109,15 +99,10 @@ def decompress_harb(
         )
 
     if not harb_file.is_file():
-        raise FileNotFoundError(
-            f"[{RED}ERROR{RESET}] Not a file: {harb_file}"
-        )
+        raise FileNotFoundError(f"[{RED}ERROR{RESET}] Not a file: {harb_file}")
 
     if harb_file.suffix.lower() != ".harb":
-        raise ValueError(
-            f"[{RED}ERROR{RESET}] "
-            f"Expected a .harb file: {harb_file}"
-        )
+        raise ValueError(f"[{RED}ERROR{RESET}] Expected a .harb file: {harb_file}")
 
     if output_dir is None:
         output_dir = harb_file.parent
@@ -145,50 +130,34 @@ def decompress_harb(
 
     if not container.exists():
         raise FileNotFoundError(
-            f"[{RED}ERROR{RESET}] "
-            f"Could not find extracted container: {container}"
+            f"[{RED}ERROR{RESET}] Could not find extracted container: {container}"
         )
 
-    print(
-        f"[{GREEN} OK {RESET}] "
-        f"Container decompressed: {container}"
-    )
+    print(f"[{GREEN} OK {RESET}] Container decompressed: {container}")
 
     return container
 
-def main_wrapper(path: Optional[Path] = None) -> None:
-    """Create a Harbor container for a project directory."""
-    project_dir = (
-        path
-        if path
-        else get_directory()
-    )
 
-    project_dir = (
-        Path(project_dir)
-        .expanduser()
-        .resolve()
-    )
+def main_wrapper(path: Path | None = None) -> None:
+    """Create a Harbor container for a project directory."""
+    project_dir = path if path else get_directory()
+
+    project_dir = Path(project_dir).expanduser().resolve()
 
     if not project_dir.exists():
         raise FileNotFoundError(
-            f"\n[{RED}ERROR{RESET}] "
-            f"Project directory not found: {project_dir}"
+            f"\n[{RED}ERROR{RESET}] Project directory not found: {project_dir}"
         )
 
     if not project_dir.is_dir():
         raise NotADirectoryError(
-            f"\n[{RED}ERROR{RESET}] "
-            f"Project path is not a directory: {project_dir}"
+            f"\n[{RED}ERROR{RESET}] Project path is not a directory: {project_dir}"
         )
 
     project_name = header(project_dir)
 
     if not project_name:
-        raise ValueError(
-            f"\n[{RED}ERROR{RESET}] "
-            "Could not determine the project name."
-        )
+        raise ValueError(f"\n[{RED}ERROR{RESET}] Could not determine the project name.")
 
     container = create_container(
         project_name,
@@ -205,28 +174,18 @@ def main_wrapper(path: Optional[Path] = None) -> None:
     # Creates the complete recursive hash tree.
     hash_code = hash_folder(container)
 
-    create_encrypted = input(
-        "\n[?] Create encrypted copy of the container? [Y/n]: "
-    )
+    create_encrypted = input("\n[?] Create encrypted copy of the container? [Y/n]: ")
 
     create_encrypted = create_encrypted.strip().lower()
 
     if create_encrypted in ("", "y", "yes"):
-        password = input(
-            "\n[?] Enter a password for encryption: "
-        ).strip()
+        password = input("\n[?] Enter a password for encryption: ").strip()
 
         if not password:
-            print(
-                f"[{YELLOW}INFO{RESET}] "
-                "No password provided. Skipping encryption."
-            )
+            print(f"[{YELLOW}INFO{RESET}] No password provided. Skipping encryption.")
             return
 
-        zip_file = (
-            container.parent
-            / f"{project_name}.zip"
-        )
+        zip_file = container.parent / f"{project_name}.zip"
 
         shutil.make_archive(
             str(zip_file.with_suffix("")),
@@ -234,20 +193,13 @@ def main_wrapper(path: Optional[Path] = None) -> None:
             container,
         )
 
-        container_bytes = BCB_bytes_text(
-            zip_file
-        )
+        container_bytes = BCB_bytes_text(zip_file)
 
-        output_file = (
-            container.parent
-            / f"{project_name}_encrypted.bcb"
-        )
+        output_file = container.parent / f"{project_name}_encrypted.bcb"
 
-        encrypted_content = (
-            BCB_Cryptography_bytes_passwd(
-                container_bytes,
-                password,
-            )
+        encrypted_content = BCB_Cryptography_bytes_passwd(
+            container_bytes,
+            password,
         )
 
         with open(
@@ -259,10 +211,7 @@ def main_wrapper(path: Optional[Path] = None) -> None:
 
         zip_file.unlink()
 
-        print(
-            f"[{GREEN} OK {RESET}] "
-            f"Encrypted copy created: {output_file}"
-        )
+        print(f"[{GREEN} OK {RESET}] Encrypted copy created: {output_file}")
 
     compress_harb(container)
 

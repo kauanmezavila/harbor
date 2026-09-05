@@ -5,7 +5,6 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
-
 ALPHABET = ""
 AES_PREFIX = "HBAES1:"
 SALT_SIZE = 16
@@ -53,10 +52,10 @@ def BCB_Descryptography_bytes_passwd(text, key, iv=None):
     if not text.startswith(AES_PREFIX):
         raise ValueError("Unsupported encrypted file format.")
 
-    payload = base64.b64decode(text[len(AES_PREFIX):])
+    payload = base64.b64decode(text[len(AES_PREFIX) :])
     salt = payload[:SALT_SIZE]
-    nonce = payload[SALT_SIZE:SALT_SIZE + NONCE_SIZE]
-    encrypted = payload[SALT_SIZE + NONCE_SIZE:]
+    nonce = payload[SALT_SIZE : SALT_SIZE + NONCE_SIZE]
+    encrypted = payload[SALT_SIZE + NONCE_SIZE :]
 
     decrypted = AESGCM(_key(key, salt)).decrypt(nonce, encrypted, None)
     return decrypted.decode("utf-8")

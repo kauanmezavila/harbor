@@ -1,35 +1,27 @@
 from ContainerStuff.Obsidian.BaseSystem.crypto import (
     ALPHABET,
+    BCB_bytes_text,
     BCB_Cryptography_bytes_passwd,
     BCB_Descryptography_bytes_passwd,
-    BCB_bytes_text,
     valid_key,
 )
 
 
 def main_bcb_crypt_flux_v1(path, password):
-    try:
-        """Read a file and return its encrypted Base64 payload."""
-        if valid_key(password, ALPHABET) is True:
-            file_bytes = BCB_bytes_text(path)
-            encrypted_content = BCB_Cryptography_bytes_passwd(file_bytes, password)
-            return encrypted_content
+    """Read a file and return its encrypted Base64 payload."""
+    if valid_key(password, ALPHABET) is True:
+        file_bytes = BCB_bytes_text(path)
+        return BCB_Cryptography_bytes_passwd(file_bytes, password)
 
-        return
-    except Exception as e:
-        print(f"[ERROR] Failed to encrypt file: {e}")
-        return
+    return None
 
 
 def main_bcb_decrypt_flux_v1(path, password):
-    try:
-        """Read a file and return its decrypted Base64 payload."""
-        if valid_key(password, ALPHABET) is True:
-            file_bytes = BCB_bytes_text(path)
-            decrypted_content = BCB_Descryptography_bytes_passwd(file_bytes, password)
-            return decrypted_content
+    """Read an encrypted file and return its decrypted Base64 payload."""
+    if valid_key(password, ALPHABET) is True:
+        with open(path, encoding="utf-8") as file:
+            encrypted_text = file.read()
 
-        return
-    except Exception as e:
-        print(f"[ERROR] Failed to decrypt file: {e}")
-        return
+        return BCB_Descryptography_bytes_passwd(encrypted_text, password)
+
+    return None

@@ -2,16 +2,11 @@ import os
 import shlex
 from pathlib import Path
 
-try:
-    import readline
-except ImportError:
-    pass
-
 from ContainerStuff.access import restore_container
 from ContainerStuff.compatibility import test_compatibility
+from ContainerStuff.wrapper import main_wrapper
 from ContainerStuff.WrapperStuff.hashflux import update_hash
 from ContainerStuff.WrapperStuff.verifyflux import verify
-from ContainerStuff.wrapper import main_wrapper
 
 RESET = "\033[0m"
 BOLD = "\033[1m"
@@ -49,7 +44,7 @@ def main():
 
     while True:
         cmd = shlex.split(input(f"{BOLD}{CYAN}Harbor{RESET} > ").strip())
-        print("")
+        print()
 
         if len(cmd) == 0:
             continue
@@ -60,7 +55,7 @@ def main():
 
         elif cmd[0] == "help":
             print(
-                fr"""{BOLD}{CYAN}Available commands:{RESET}
+                rf"""{BOLD}{CYAN}Available commands:{RESET}
 {BOLD}{CYAN}  help{RESET}                   Show this help message
 {BOLD}{CYAN}  exit{RESET}                   Exit Harbor
 {BOLD}{CYAN}  clear{RESET}                  Clear the screen
@@ -94,7 +89,9 @@ def main():
             if len(cmd) > 1:
                 bcb_file = Path(cmd[1])
                 output_dir = Path(cmd[2]) if len(cmd) > 2 else Path(".")
-                password = input(f"{BOLD}{CYAN}Enter password for the container: {RESET}")
+                password = input(
+                    f"{BOLD}{CYAN}Enter password for the container: {RESET}"
+                )
                 try:
                     restore_container(bcb_file, password, output_dir)
                 except ValueError as error:
@@ -140,7 +137,8 @@ def main():
                 )
 
         elif cmd[0] == "hi":
-            print(fr"""{RESET}
+            print(
+                rf"""{RESET}
 {WHITE}{BOLD}2222222222222222222222222222222222222222222222222222222222222222222222      {WHITE}██{MAGENTA}╗{WHITE}  ██{MAGENTA}╗{WHITE} █████{MAGENTA}╗{WHITE} ██████{MAGENTA}╗{WHITE} ██████{MAGENTA}╗{WHITE}  ██████{MAGENTA}╗{WHITE} ██████{MAGENTA}╗{WHITE} 
 {WHITE}{BOLD}2222222222222222222222222222222222222222222222222222222222222222222222      {WHITE}██{MAGENTA}║{WHITE}  ██{MAGENTA}║{WHITE}██{MAGENTA}╔══{WHITE}██{MAGENTA}╗{WHITE}██{MAGENTA}╔══{WHITE}██{MAGENTA}╗{WHITE}██{MAGENTA}╔══{WHITE}██{MAGENTA}╗{WHITE}██{MAGENTA}╔═══{WHITE}██{MAGENTA}╗{WHITE}██{MAGENTA}╔══{WHITE}██{MAGENTA}╗
 {WHITE}{BOLD}222                                                                222      {WHITE}███████{MAGENTA}║{WHITE}███████{MAGENTA}║{WHITE}██████{MAGENTA}╔╝{WHITE}██████{MAGENTA}╔╝{WHITE}██{MAGENTA}║   {WHITE}██{MAGENTA}║{WHITE}██████{MAGENTA}╔╝
@@ -202,7 +200,8 @@ def main():
 {WHITE}{BOLD}222                                                                222
 {WHITE}{BOLD}2222222222222222222222222222222222222222222222222222222222222222222222
 {WHITE}{BOLD}2222222222222222222222222222222222222222222222222222222222222222222222
-""")
+"""
+            )
 
         else:
             print(
@@ -211,4 +210,5 @@ def main():
             )
 
 
-main()
+if __name__ == "__main__":
+    main()

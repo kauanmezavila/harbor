@@ -78,7 +78,7 @@ def find_runtime(stack: str):
             if "runtime" in data:
                 return data["runtime"]
 
-            if "required" in data and data["required"]:
+            if data.get("required"):
                 return data["required"][0]
 
     return None
@@ -94,7 +94,7 @@ def load_ignore(directory: str):
     with open(ignore_path, "r", encoding="utf-8") as f:
         lines = [
             line.strip()
-            for line in f.readlines()
+            for line in f
             if line.strip() and not line.lstrip().startswith("#")
         ]
 
@@ -220,7 +220,11 @@ def show_stacks(stacks: dict, stats: dict | None = None):
         if runtime and runtime not in stack_list:
             stack_list.append(runtime)
 
-        print(c("└── " if is_last else "├── ", GRAY) + c("◆ ", GREEN) + c(stack, BOLD + WHITE))
+        print(
+            c("└── " if is_last else "├── ", GRAY)
+            + c("◆ ", GREEN)
+            + c(stack, BOLD + WHITE)
+        )
 
         if runtime:
             print(c("    ├── runtime: ", GRAY) + c(runtime, CYAN))

@@ -1,10 +1,8 @@
 import os
 import shutil
 from pathlib import Path
-from typing import Optional
 
 import pathspec
-
 
 RESET = "\033[0m"
 BOLD = "\033[1m"
@@ -27,24 +25,16 @@ def create_container(container_name: str, directory: Path) -> Path:
     container_path = directory.parent / container_name
 
     if container_path.exists():
-        print(
-            f"\n[{YELLOW}INFO{RESET}] Container already exists:"
-        )
+        print(f"\n[{YELLOW}INFO{RESET}] Container already exists:")
         print(f"  {container_path}")
 
-        answer = input(
-            "\n[!] Want to overwrite? [y/N]: "
-        ).strip().lower()
+        answer = input("\n[!] Want to overwrite? [y/N]: ").strip().lower()
 
         if answer != "y":
-            print(
-                f"[{YELLOW}INFO{RESET}] Operation cancelled."
-            )
+            print(f"[{YELLOW}INFO{RESET}] Operation cancelled.")
             raise SystemExit(0)
 
-        print(
-            f"[{YELLOW}INFO{RESET}] Removing old container..."
-        )
+        print(f"[{YELLOW}INFO{RESET}] Removing old container...")
 
         if container_path.is_dir():
             shutil.rmtree(container_path)
@@ -55,17 +45,15 @@ def create_container(container_name: str, directory: Path) -> Path:
     (container_path / "Code").mkdir(exist_ok=True)
     (container_path / "Info").mkdir(exist_ok=True)
 
-    print(
-        f"[{GREEN} OK {RESET}] Container created: {container_path}"
-    )
+    print(f"[{GREEN} OK {RESET}] Container created: {container_path}")
 
     return container_path
 
 
 def load_ignore(
     directory: Path,
-    default: Optional[Path] = None,
-) -> Optional[pathspec.PathSpec]:
+    default: Path | None = None,
+) -> pathspec.PathSpec | None:
     """Choose and load .harbignore rules for the copy step."""
     project_ignore = directory / ".harbignore"
 
@@ -76,100 +64,69 @@ def load_ignore(
     )
 
     if project_ignore.is_file():
-        print(
-            f"\n[{CYAN}IGNORE{RESET}] Project .harbignore found:"
-        )
+        print(f"\n[{CYAN}IGNORE{RESET}] Project .harbignore found:")
         print(f"  {project_ignore}")
 
-        answer = input(
-            "\n[?] Use project .harbignore? [Y/n]: "
-        ).strip().lower()
+        answer = input("\n[?] Use project .harbignore? [Y/n]: ").strip().lower()
 
         if answer in ("", "y", "yes"):
             ignore_path = project_ignore
 
         elif default_ignore.is_file():
-            answer = input(
-                "\n[?] Use default Harbor .harbignore? [Y/n]: "
-            ).strip().lower()
+            answer = (
+                input("\n[?] Use default Harbor .harbignore? [Y/n]: ").strip().lower()
+            )
 
             if answer in ("", "y", "yes"):
                 ignore_path = default_ignore
 
             else:
-                print(
-                    f"[{YELLOW}INFO{RESET}] "
-                    "No ignore file will be used."
-                )
+                print(f"[{YELLOW}INFO{RESET}] No ignore file will be used.")
                 return None
 
         else:
-            print(
-                f"[{YELLOW}INFO{RESET}] "
-                "No default .harbignore found."
-            )
+            print(f"[{YELLOW}INFO{RESET}] No default .harbignore found.")
 
-            answer = input(
-                "\n[?] Use default Harbor .harbignore? [Y/n]: "
-            ).strip().lower()
+            answer = (
+                input("\n[?] Use default Harbor .harbignore? [Y/n]: ").strip().lower()
+            )
 
             if answer in ("", "y", "yes"):
                 ignore_path = default_ignore
 
             else:
-                print(
-                    f"[{YELLOW}INFO{RESET}] "
-                    "No ignore file will be used."
-                )
+                print(f"[{YELLOW}INFO{RESET}] No ignore file will be used.")
                 return None
-        
 
     else:
         if not default_ignore.is_file():
-            print(
-                f"[{YELLOW}INFO{RESET}] "
-                "No .harbignore found."
-            )
+            print(f"[{YELLOW}INFO{RESET}] No .harbignore found.")
             return None
 
-        print(
-            f"\n[{CYAN}IGNORE{RESET}] "
-            "Default Harbor .harbignore found:"
-        )
+        print(f"\n[{CYAN}IGNORE{RESET}] Default Harbor .harbignore found:")
         print(f"  {default_ignore}")
 
-        answer = input(
-            "\n[?] Use default Harbor .harbignore? [Y/n]: "
-        ).strip().lower()
+        answer = input("\n[?] Use default Harbor .harbignore? [Y/n]: ").strip().lower()
 
         if answer in ("", "y", "yes"):
             ignore_path = default_ignore
 
         else:
-            print(
-                f"[{YELLOW}INFO{RESET}] "
-                "No ignore file will be used."
-            )
+            print(f"[{YELLOW}INFO{RESET}] No ignore file will be used.")
             return None
 
     with ignore_path.open("r", encoding="utf-8") as file:
         lines = [
             line.strip()
             for line in file
-            if line.strip()
-            and not line.lstrip().startswith("#")
+            if line.strip() and not line.lstrip().startswith("#")
         ]
 
     if not lines:
-        print(
-            f"[{YELLOW}INFO{RESET}] Ignore file is empty."
-        )
+        print(f"[{YELLOW}INFO{RESET}] Ignore file is empty.")
         return None
 
-    print(
-        f"[{GREEN} OK {RESET}] "
-        f"Using ignore file: {ignore_path}"
-    )
+    print(f"[{GREEN} OK {RESET}] Using ignore file: {ignore_path}")
 
     return pathspec.PathSpec.from_lines(
         "gitwildmatch",
@@ -182,29 +139,18 @@ def copy_project(source: Path, destination: Path) -> bool:
     source = source.expanduser().resolve()
     destination = destination.expanduser().resolve()
 
-    info_files = {
-        "header.json",
-        "tree.json",
-        ".harbignore",
-        ".harbinstall"
-    }
+    info_files = {"header.json", "tree.json", ".harbignore", ".harbinstall"}
 
     if not source.exists():
-        raise FileNotFoundError(
-            f"\n[{RED}ERROR{RESET}] Origin not found: {source}"
-        )
+        raise FileNotFoundError(f"\n[{RED}ERROR{RESET}] Origin not found: {source}")
 
     if not source.is_dir():
         raise NotADirectoryError(
-            f"\n[{RED}ERROR{RESET}] "
-            f"The origin is not a directory: {source}"
+            f"\n[{RED}ERROR{RESET}] The origin is not a directory: {source}"
         )
 
     if destination == source:
-        raise ValueError(
-            f"\n[{RED}ERROR{RESET}] "
-            "The destination cannot be the origin."
-        )
+        raise ValueError(f"\n[{RED}ERROR{RESET}] The destination cannot be the origin.")
 
     try:
         destination.relative_to(source)
@@ -226,10 +172,14 @@ def copy_project(source: Path, destination: Path) -> bool:
 
     ignore = load_ignore(source)
 
-    git_ask_use = input(
-        f"\nWant to include .git on the container? "
-        f"(I don't recommend including it...) [y/N]: "
-    ).strip().lower()
+    git_ask_use = (
+        input(
+            "\nWant to include .git on the container? "
+            "(I don't recommend including it...) [y/N]: "
+        )
+        .strip()
+        .lower()
+    )
 
     include_git = git_ask_use == "y"
 
@@ -253,19 +203,14 @@ def copy_project(source: Path, destination: Path) -> bool:
         for folder in folders:
             path = root / folder
 
-            relative_path = (
-                path.relative_to(source).as_posix()
-            )
+            relative_path = path.relative_to(source).as_posix()
 
             ignore_path = relative_path + "/"
 
             if folder == ".git":
                 if not include_git:
                     ignored += 1
-                    print(
-                        f"[{YELLOW} IGNORE {RESET}] "
-                        f"{ignore_path}"
-                    )
+                    print(f"[{YELLOW} IGNORE {RESET}] {ignore_path}")
                     continue
 
                 valid_folders.append(folder)
@@ -274,10 +219,7 @@ def copy_project(source: Path, destination: Path) -> bool:
             if ignore and ignore.match_file(ignore_path):
                 ignored += 1
 
-                print(
-                    f"[{YELLOW} IGNORE {RESET}] "
-                    f"{ignore_path}"
-                )
+                print(f"[{YELLOW} IGNORE {RESET}] {ignore_path}")
 
                 continue
 
@@ -295,28 +237,18 @@ def copy_project(source: Path, destination: Path) -> bool:
         for file_name in files:
             source_file = root / file_name
 
-            relative_file = (
-                source_file.relative_to(source)
-            )
+            relative_file = source_file.relative_to(source)
 
             relative_file_str = relative_file.as_posix()
 
-            if ignore and ignore.match_file(
-                relative_file_str
-            ):
+            if ignore and ignore.match_file(relative_file_str):
                 ignored += 1
 
-                print(
-                    f"[{YELLOW} IGNORE {RESET}] "
-                    f"{relative_file_str}"
-                )
+                print(f"[{YELLOW} IGNORE {RESET}] {relative_file_str}")
 
                 continue
 
-            if (
-                relative_file.parent == Path(".")
-                and file_name in info_files
-            ):
+            if relative_file.parent == Path(".") and file_name in info_files:
                 shutil.copy2(
                     source_file,
                     info_destination / file_name,
@@ -324,16 +256,11 @@ def copy_project(source: Path, destination: Path) -> bool:
 
                 infos += 1
 
-                print(
-                    f"[{CYAN}  INFO  {RESET}] "
-                    f"{relative_file_str}"
-                )
+                print(f"[{CYAN}  INFO  {RESET}] {relative_file_str}")
 
                 continue
 
-            destination_file = (
-                destination / relative_file
-            )
+            destination_file = destination / relative_file
 
             destination_file.parent.mkdir(
                 parents=True,
@@ -347,16 +274,10 @@ def copy_project(source: Path, destination: Path) -> bool:
 
             copied += 1
 
-            print(
-                f"[{GREEN}  CODE  {RESET}] "
-                f"{relative_file_str}"
-            )
+            print(f"[{GREEN}  CODE  {RESET}] {relative_file_str}")
 
     print()
-    print(
-        f"[{GREEN} OK {RESET}] "
-        "Project copied successfully."
-    )
+    print(f"[{GREEN} OK {RESET}] Project copied successfully.")
     print(f"      Files copied : {copied}")
     print(f"      Info files   : {infos}")
     print(f"      Items ignored: {ignored}")

@@ -6,7 +6,12 @@ STACKS = {
             "stack": "Python",
             "runtime": "python>=3.13",
             "package_managers": ["pip", "poetry", "uv"],
-            "detectors": ["requirements.txt", "pyproject.toml", "poetry.lock", "Pipfile"],
+            "detectors": [
+                "requirements.txt",
+                "pyproject.toml",
+                "poetry.lock",
+                "Pipfile",
+            ],
         },
         ".js": {
             "stack": "Node.js",

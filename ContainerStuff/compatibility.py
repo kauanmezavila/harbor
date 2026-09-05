@@ -1,12 +1,10 @@
-import re
-import json
-import shutil
 import argparse
+import json
 import platform
+import re
+import shutil
 import subprocess
-
 from pathlib import Path
-
 
 RESET = "\033[0m"
 BOLD = "\033[1m"
@@ -26,12 +24,11 @@ GRAY = "\033[90m"
 # DIRECTORY
 # ============================================================
 
+
 def get_directory() -> Path:
     """Read and validate the project directory from CLI arguments."""
 
-    parser = argparse.ArgumentParser(
-        description="Analyse a project path."
-    )
+    parser = argparse.ArgumentParser(description="Analyse a project path.")
 
     parser.add_argument(
         "directory",
@@ -42,28 +39,15 @@ def get_directory() -> Path:
 
     args = parser.parse_args()
 
-    path = (
-        Path(args.directory)
-        .expanduser()
-        .resolve()
-    )
+    path = Path(args.directory).expanduser().resolve()
 
     if not path.exists():
-        parser.error(
-            f"[{RED}ERROR{RESET}] "
-            f"The path does not exist: {path}!"
-        )
+        parser.error(f"[{RED}ERROR{RESET}] The path does not exist: {path}!")
 
     if not path.is_dir():
-        parser.error(
-            f"[{RED}ERROR{RESET}] "
-            f"The path is not a directory: {path}!"
-        )
+        parser.error(f"[{RED}ERROR{RESET}] The path is not a directory: {path}!")
 
-    print(
-        f"[{GREEN} OK {RESET}] "
-        f"Project found: [{path}]"
-    )
+    print(f"[{GREEN} OK {RESET}] Project found: [{path}]")
 
     return path
 
@@ -71,6 +55,7 @@ def get_directory() -> Path:
 # ============================================================
 # LANGUAGE / RUNTIME
 # ============================================================
+
 
 def extract_lang(cmd, version_args="--version"):
     """
@@ -94,10 +79,7 @@ def extract_lang(cmd, version_args="--version"):
             check=False,
         )
 
-        output = (
-            result.stdout
-            or result.stderr
-        ).strip()
+        output = (result.stdout or result.stderr).strip()
 
         if not output:
             return None
@@ -130,10 +112,7 @@ def parse_version(version):
     """
 
     try:
-        return tuple(
-            int(part)
-            for part in version.split(".")
-        )
+        return tuple(int(part) for part in version.split("."))
 
     except ValueError:
         return None
@@ -151,13 +130,9 @@ def compare_versions(installed, required):
         len(required),
     )
 
-    installed = installed + (
-        0,
-    ) * (length - len(installed))
+    installed = installed + (0,) * (length - len(installed))
 
-    required = required + (
-        0,
-    ) * (length - len(required))
+    required = required + (0,) * (length - len(required))
 
     return installed >= required
 
@@ -198,9 +173,7 @@ def check_langs(lang):
             "installed": None,
         }
 
-    version_in_system = extract_lang(
-        command
-    )
+    version_in_system = extract_lang(command)
 
     if version_in_system is None:
         return {
@@ -210,13 +183,9 @@ def check_langs(lang):
             "installed": None,
         }
 
-    required = parse_version(
-        required_version
-    )
+    required = parse_version(required_version)
 
-    installed = parse_version(
-        version_in_system
-    )
+    installed = parse_version(version_in_system)
 
     if required is None or installed is None:
         return {
@@ -232,11 +201,7 @@ def check_langs(lang):
     )
 
     return {
-        "status": (
-            "compatible"
-            if compatible
-            else "wrong_version"
-        ),
+        "status": ("compatible" if compatible else "wrong_version"),
         "language": command,
         "required": required_version,
         "installed": version_in_system,
@@ -246,6 +211,7 @@ def check_langs(lang):
 # ============================================================
 # OS / ARCHITECTURE
 # ============================================================
+
 
 def normalize_os(value):
     """
@@ -261,17 +227,14 @@ def normalize_os(value):
     aliases = {
         "linux": "linux",
         "gnu/linux": "linux",
-
         "windows": "windows",
         "win": "windows",
         "win32": "windows",
         "win64": "windows",
-
         "darwin": "macos",
         "mac": "macos",
         "macos": "macos",
         "osx": "macos",
-
         "freebsd": "freebsd",
     }
 
@@ -299,14 +262,11 @@ def normalize_arch(value):
         "amd64": "x86_64",
         "x64": "x86_64",
         "x86-64": "x86_64",
-
         "aarch64": "arm64",
         "arm64": "arm64",
-
         "x86": "x86",
         "i386": "x86",
         "i686": "x86",
-
         "arm": "arm",
         "arm32": "arm",
     }
@@ -364,13 +324,9 @@ def check_os_and_arch(
     actual_os_raw = platform.system()
     actual_arch_raw = platform.machine()
 
-    actual_os = normalize_os(
-        actual_os_raw
-    )
+    actual_os = normalize_os(actual_os_raw)
 
-    actual_arch = normalize_arch(
-        actual_arch_raw
-    )
+    actual_arch = normalize_arch(actual_arch_raw)
 
     supported_os = normalize_list(
         supported_os,
@@ -388,32 +344,23 @@ def check_os_and_arch(
 
     # If no OS is specified, we treat it as
     # "no OS restriction".
-    os_compatible = (
-        not supported_os
-        or actual_os in supported_os
-    )
+    os_compatible = not supported_os or actual_os in supported_os
 
     # Same idea for architecture.
     arch_compatible = (
-        not supported_architectures
-        or actual_arch in supported_architectures
+        not supported_architectures or actual_arch in supported_architectures
     )
 
-    compatible = (
-        os_compatible
-        and arch_compatible
-    )
+    compatible = os_compatible and arch_compatible
 
     return {
         "compatible": compatible,
-
         "os": {
             "actual": actual_os,
             "actual_raw": actual_os_raw,
             "supported": supported_os,
             "compatible": os_compatible,
         },
-
         "architecture": {
             "actual": actual_arch,
             "actual_raw": actual_arch_raw,
@@ -427,56 +374,41 @@ def check_os_and_arch(
 # COMPATIBILITY
 # ============================================================
 
+
 def test_compatibility(path=None):
     """
     Test whether the current system is compatible
     with the Harbor container/project.
     """
 
-    directory = (
-        path
-        if path
-        else get_directory()
-    )
+    directory = path if path else get_directory()
 
-    directory = (
-        Path(directory)
-        .expanduser()
-        .resolve()
-    )
+    directory = Path(directory).expanduser().resolve()
 
     if not directory.exists():
         raise FileNotFoundError(
-            f"\n[{RED}ERROR{RESET}] "
-            f"Project directory not found: {directory}"
+            f"\n[{RED}ERROR{RESET}] Project directory not found: {directory}"
         )
 
     if not directory.is_dir():
         raise NotADirectoryError(
-            f"\n[{RED}ERROR{RESET}] "
-            f"Project path is not a directory: {directory}"
+            f"\n[{RED}ERROR{RESET}] Project path is not a directory: {directory}"
         )
 
     # --------------------------------------------------------
     # Header
     # --------------------------------------------------------
 
-    info_path = (
-        directory
-        / "Info"
-        / "header.json"
-    )
+    info_path = directory / "Info" / "header.json"
 
     if not info_path.exists():
         raise FileNotFoundError(
-            f"\n[{RED}ERROR{RESET}] "
-            f"header.json not found: {info_path}"
+            f"\n[{RED}ERROR{RESET}] header.json not found: {info_path}"
         )
 
     if not info_path.is_file():
         raise FileNotFoundError(
-            f"\n[{RED}ERROR{RESET}] "
-            f"Invalid header.json: {info_path}"
+            f"\n[{RED}ERROR{RESET}] Invalid header.json: {info_path}"
         )
 
     try:
@@ -488,10 +420,7 @@ def test_compatibility(path=None):
             header_data = json.load(f)
 
     except json.JSONDecodeError as error:
-        raise ValueError(
-            f"\n[{RED}ERROR{RESET}] "
-            f"Invalid JSON in header.json: {error}"
-        )
+        raise ValueError(f"\n[{RED}ERROR{RESET}] Invalid JSON in header.json: {error}")
 
     # --------------------------------------------------------
     # Project metadata
@@ -545,21 +474,13 @@ def test_compatibility(path=None):
         supported_architectures,
     )
 
-    actual_os = (
-        os_arch_result["os"]["actual"]
-    )
+    actual_os = os_arch_result["os"]["actual"]
 
-    actual_arch = (
-        os_arch_result["architecture"]["actual"]
-    )
+    actual_arch = os_arch_result["architecture"]["actual"]
 
-    os_compatible = (
-        os_arch_result["os"]["compatible"]
-    )
+    os_compatible = os_arch_result["os"]["compatible"]
 
-    arch_compatible = (
-        os_arch_result["architecture"]["compatible"]
-    )
+    arch_compatible = os_arch_result["architecture"]["compatible"]
 
     # --------------------------------------------------------
     # Display header
@@ -567,33 +488,17 @@ def test_compatibility(path=None):
 
     print()
 
-    print(
-        f"{BOLD}{CYAN}"
-        "========================================"
-        f"{RESET}"
-    )
+    print(f"{BOLD}{CYAN}========================================{RESET}")
 
-    print(
-        f"{BOLD}        HARBOR COMPATIBILITY{RESET}"
-    )
+    print(f"{BOLD}        HARBOR COMPATIBILITY{RESET}")
 
-    print(
-        f"{BOLD}{CYAN}"
-        "========================================"
-        f"{RESET}"
-    )
+    print(f"{BOLD}{CYAN}========================================{RESET}")
 
     print()
 
-    print(
-        f"Project name:           "
-        f"{YELLOW}{project_name}{RESET}"
-    )
+    print(f"Project name:           {YELLOW}{project_name}{RESET}")
 
-    print(
-        f"Project version:        "
-        f"{YELLOW}{project_version}{RESET}"
-    )
+    print(f"Project version:        {YELLOW}{project_version}{RESET}")
 
     print()
 
@@ -602,38 +507,26 @@ def test_compatibility(path=None):
     # --------------------------------------------------------
 
     supported_os_display = (
-        ", ".join(
-            os_arch_result["os"]["supported"]
-        )
+        ", ".join(os_arch_result["os"]["supported"])
         if os_arch_result["os"]["supported"]
         else "Any"
     )
 
     print(
-        f"Operating system:       "
-        f"{YELLOW}{actual_os}{RESET} "
-        f"({supported_os_display})"
+        f"Operating system:       {YELLOW}{actual_os}{RESET} ({supported_os_display})"
     )
 
     if os_compatible:
-        print(
-            f"       {GREEN}OK{RESET} "
-            f"Operating system is supported."
-        )
+        print(f"       {GREEN}OK{RESET} Operating system is supported.")
     else:
-        print(
-            f"       {RED}NO{RESET} "
-            f"Operating system is not supported."
-        )
+        print(f"       {RED}NO{RESET} Operating system is not supported.")
 
     # --------------------------------------------------------
     # Architecture
     # --------------------------------------------------------
 
     supported_arch_display = (
-        ", ".join(
-            os_arch_result["architecture"]["supported"]
-        )
+        ", ".join(os_arch_result["architecture"]["supported"])
         if os_arch_result["architecture"]["supported"]
         else "Any"
     )
@@ -647,15 +540,9 @@ def test_compatibility(path=None):
     )
 
     if arch_compatible:
-        print(
-            f"       {GREEN}OK{RESET} "
-            f"Architecture is supported."
-        )
+        print(f"       {GREEN}OK{RESET} Architecture is supported.")
     else:
-        print(
-            f"       {RED}NO{RESET} "
-            f"Architecture is not supported."
-        )
+        print(f"       {RED}NO{RESET} Architecture is not supported.")
 
     # --------------------------------------------------------
     # Stacks
@@ -663,26 +550,17 @@ def test_compatibility(path=None):
 
     print()
 
-    print(
-        f"{BOLD}Stacks:{RESET}"
-    )
+    print(f"{BOLD}Stacks:{RESET}")
 
     if not stacks:
-        print(
-            f"       {YELLOW}- "
-            f"No stacks specified{RESET}"
-        )
+        print(f"       {YELLOW}- No stacks specified{RESET}")
 
     results = []
 
     for stack in stacks:
-        result = check_langs(
-            stack
-        )
+        result = check_langs(stack)
 
-        results.append(
-            result
-        )
+        results.append(result)
 
         language = result["language"]
         required = result["required"]
@@ -705,24 +583,14 @@ def test_compatibility(path=None):
 
         elif status == "not_found":
             print(
-                f"       {RED}NO{RESET} "
-                f"{language} >= {required} "
-                f"(not found/installed)"
+                f"       {RED}NO{RESET} {language} >= {required} (not found/installed)"
             )
 
         elif status == "unsupported":
-            print(
-                f"       {YELLOW}??{RESET} "
-                f"{stack} "
-                f"(unsupported requirement)"
-            )
+            print(f"       {YELLOW}??{RESET} {stack} (unsupported requirement)")
 
         elif status == "invalid":
-            print(
-                f"       {RED}NO{RESET} "
-                f"{stack} "
-                f"(invalid requirement)"
-            )
+            print(f"       {RED}NO{RESET} {stack} (invalid requirement)")
 
         elif status == "invalid_version":
             print(
@@ -736,84 +604,45 @@ def test_compatibility(path=None):
     # Runtime compatibility
     # --------------------------------------------------------
 
-    stacks_compatible = all(
-        result["status"] == "compatible"
-        for result in results
-    )
+    stacks_compatible = all(result["status"] == "compatible" for result in results)
 
     # --------------------------------------------------------
     # Final result
     # --------------------------------------------------------
 
-    compatible = (
-        os_compatible
-        and arch_compatible
-        and stacks_compatible
-    )
+    compatible = os_compatible and arch_compatible and stacks_compatible
 
     print()
 
-    print(
-        f"{BOLD}{CYAN}"
-        "========================================"
-        f"{RESET}"
-    )
+    print(f"{BOLD}{CYAN}========================================{RESET}")
 
     if compatible:
-        print(
-            f"{BOLD}{GREEN}"
-            "       ENVIRONMENT COMPATIBLE"
-            f"{RESET}"
-        )
+        print(f"{BOLD}{GREEN}       ENVIRONMENT COMPATIBLE{RESET}")
 
-        print(
-            f"{GREEN}"
-            "  The project can run on this system."
-            f"{RESET}"
-        )
+        print(f"{GREEN}  The project can run on this system.{RESET}")
 
     else:
-        print(
-            f"{BOLD}{RED}"
-            "     ENVIRONMENT NOT COMPATIBLE"
-            f"{RESET}"
-        )
+        print(f"{BOLD}{RED}     ENVIRONMENT NOT COMPATIBLE{RESET}")
 
         if not os_compatible:
-            print(
-                f"     {RED}NO{RESET} "
-                "Operating system mismatch."
-            )
+            print(f"     {RED}NO{RESET} Operating system mismatch.")
 
         if not arch_compatible:
-            print(
-                f"     {RED}NO{RESET} "
-                "Architecture mismatch."
-            )
+            print(f"     {RED}NO{RESET} Architecture mismatch.")
 
         if not stacks_compatible:
-            print(
-                f"     {RED}NO{RESET} "
-                "Runtime stack mismatch."
-            )
+            print(f"     {RED}NO{RESET} Runtime stack mismatch.")
 
-    print(
-        f"{BOLD}{CYAN}"
-        "========================================"
-        f"{RESET}"
-    )
+    print(f"{BOLD}{CYAN}========================================{RESET}")
 
     print()
 
     return {
         "compatible": compatible,
-
         "project_name": project_name,
         "project_version": project_version,
-
         "os": os_arch_result["os"],
         "architecture": os_arch_result["architecture"],
-
         "stacks": results,
     }
 

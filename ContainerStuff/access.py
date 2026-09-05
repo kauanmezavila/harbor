@@ -2,12 +2,10 @@ import argparse
 import base64
 import shutil
 from pathlib import Path
-from typing import Optional
 
 from ContainerStuff.Obsidian.BaseSystem.crypto import (
     BCB_Descryptography_bytes_passwd,
 )
-
 
 RESET = "\033[0m"
 BOLD = "\033[1m"
@@ -25,9 +23,7 @@ GRAY = "\033[90m"
 
 def get_directory() -> Path:
     """Read and validate an output directory from CLI arguments."""
-    parser = argparse.ArgumentParser(
-        description="Analyse a project path."
-    )
+    parser = argparse.ArgumentParser(description="Analyse a project path.")
 
     parser.add_argument(
         "directory",
@@ -52,7 +48,7 @@ def get_directory() -> Path:
 def restore_container(
     bcb_file: Path,
     password: str,
-    output_dir: Optional[Path] = None,
+    output_dir: Path | None = None,
 ) -> Path:
     """
     Decrypt a Harbor .bcb file, create a temporary ZIP,
@@ -133,8 +129,7 @@ def restore_container(
             pass
 
         raise ValueError(
-            f"[{RED}ERROR{RESET}] The decrypted data is not "
-            "a valid ZIP archive."
+            f"[{RED}ERROR{RESET}] The decrypted data is not a valid ZIP archive."
         ) from error
 
     zip_file.unlink(missing_ok=True)

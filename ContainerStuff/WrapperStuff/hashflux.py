@@ -1,7 +1,7 @@
 import hashlib
 import zipfile
-from tempfile import TemporaryDirectory
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 RESET = "\033[0m"
 BOLD = "\033[1m"
@@ -29,8 +29,7 @@ def extract_harb(harb_file, destination):
 
             if destination != target and destination not in target.parents:
                 raise ValueError(
-                    f"\n[{RED}ERROR{RESET}] "
-                    f"Unsafe path inside .harb: {member.filename}"
+                    f"\n[{RED}ERROR{RESET}] Unsafe path inside .harb: {member.filename}"
                 )
 
         archive.extractall(destination)
@@ -38,18 +37,13 @@ def extract_harb(harb_file, destination):
 
 def find_container_root(directory):
     """Return the extracted Harbor folder when the archive has one root."""
-    roots = [
-        path
-        for path in Path(directory).iterdir()
-        if path.is_dir()
-    ]
+    roots = [path for path in Path(directory).iterdir() if path.is_dir()]
 
     if len(roots) == 1:
         return roots[0]
 
     raise ValueError(
-        f"\n[{RED}ERROR{RESET}] "
-        ".harb archive must contain one container root folder."
+        f"\n[{RED}ERROR{RESET}] .harb archive must contain one container root folder."
     )
 
 
@@ -57,9 +51,7 @@ def write_harb(container, harb_file):
     """Write a Harbor folder back to a .harb archive."""
     container = Path(container)
     harb_file = Path(harb_file)
-    temp_harb = harb_file.with_name(
-        f"{harb_file.name}.tmp"
-    )
+    temp_harb = harb_file.with_name(f"{harb_file.name}.tmp")
 
     with zipfile.ZipFile(
         temp_harb,
@@ -117,9 +109,7 @@ def hash_folder(folder, write=True):
         if item.is_file():
             item_hash = hash_file(item)
 
-            items.append(
-                f"FILE:{item.name}:{item_hash}"
-            )
+            items.append(f"FILE:{item.name}:{item_hash}")
 
         elif item.is_dir():
             item_hash = hash_folder(
@@ -127,15 +117,11 @@ def hash_folder(folder, write=True):
                 write=write,
             )
 
-            items.append(
-                f"DIR:{item.name}:{item_hash}"
-            )
+            items.append(f"DIR:{item.name}:{item_hash}")
 
     data = "\n".join(items).encode("utf-8")
 
-    current_folder_hash = hashlib.sha256(
-        data
-    ).hexdigest()
+    current_folder_hash = hashlib.sha256(data).hexdigest()
 
     if write:
         hash_path = folder / HASH_FILE
@@ -157,29 +143,20 @@ def update_hash(container):
     Accepts an extracted Harbor directory or a compressed .harb file.
     """
 
-    container = (
-        Path(container)
-        .expanduser()
-        .resolve()
-    )
+    container = Path(container).expanduser().resolve()
 
     if not container.exists():
         raise FileNotFoundError(
-            f"\n[{RED}ERROR{RESET}] "
-            f"Container not found: {container}"
+            f"\n[{RED}ERROR{RESET}] Container not found: {container}"
         )
 
     if container.is_file():
         if container.suffix.lower() != ".harb":
             raise ValueError(
-                f"\n[{RED}ERROR{RESET}] "
-                f"Expected a .harb file: {container}"
+                f"\n[{RED}ERROR{RESET}] Expected a .harb file: {container}"
             )
 
-        print(
-            f"\n[{YELLOW}UPDATE HASH{RESET}] "
-            "Updating .harb integrity hashes..."
-        )
+        print(f"\n[{YELLOW}UPDATE HASH{RESET}] Updating .harb integrity hashes...")
 
         with TemporaryDirectory() as temp_dir:
             extract_harb(container, temp_dir)
@@ -190,42 +167,26 @@ def update_hash(container):
             )
             write_harb(extracted, container)
 
-        print(
-            f"[{GREEN} OK {RESET}] "
-            ".harb integrity hashes updated."
-        )
+        print(f"[{GREEN} OK {RESET}] .harb integrity hashes updated.")
 
-        print(
-            f"      Root hash: "
-            f"{YELLOW}{root_hash}{RESET}\n"
-        )
+        print(f"      Root hash: {YELLOW}{root_hash}{RESET}\n")
 
         return root_hash
 
     if not container.is_dir():
         raise NotADirectoryError(
-            f"\n[{RED}ERROR{RESET}] "
-            f"Container path is not a directory: {container}"
+            f"\n[{RED}ERROR{RESET}] Container path is not a directory: {container}"
         )
 
-    print(
-        f"\n[{YELLOW}UPDATE HASH{RESET}] "
-        "Updating integrity hashes..."
-    )
+    print(f"\n[{YELLOW}UPDATE HASH{RESET}] Updating integrity hashes...")
 
     root_hash = hash_folder(
         container,
         write=True,
     )
 
-    print(
-        f"[{GREEN} OK {RESET}] "
-        "Integrity hashes updated."
-    )
+    print(f"[{GREEN} OK {RESET}] Integrity hashes updated.")
 
-    print(
-        f"      Root hash: "
-        f"{YELLOW}{root_hash}{RESET}\n"
-    )
+    print(f"      Root hash: {YELLOW}{root_hash}{RESET}\n")
 
     return root_hash

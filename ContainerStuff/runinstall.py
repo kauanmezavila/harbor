@@ -1,6 +1,7 @@
-import sys
 import shlex
 import subprocess
+import sys
+from pathlib import Path
 
 RESET = "\033[0m"
 BOLD = "\033[1m"
@@ -101,22 +102,20 @@ def run_command(command):
         try:
             cmd = shlex.split(command)
         except ValueError as e:
-            print(
-                f"[{RED}ERROR{RESET}] "
-                f"Invalid command syntax: {e}"
-            )
+            print(f"[{RED}ERROR{RESET}] Invalid command syntax: {e}")
 
             if err_break:
                 print(
-                    f"[{YELLOW}LOG{RESET}] "
-                    f"An error occurred, breaking process... [1]"
+                    f"[{YELLOW}LOG{RESET}] An error occurred, breaking process... [1]"
                 )
                 sys.exit(1)
 
             return
 
     if usr_log:
-        print(f"{HARB_CMD_PREFIX} Running: {cmd[0] if not shell_status else command[:10] + "..."}\n")
+        print(
+            f"{HARB_CMD_PREFIX} Running: {cmd[0] if not shell_status else command[:10] + '...'}\n"
+        )
 
     try:
         result = subprocess.run(
@@ -124,7 +123,7 @@ def run_command(command):
             shell=shell_status,
             capture_output=capture_output,
             text=True,
-            check=err_break
+            check=err_break,
         )
 
         if capture_output:
@@ -148,13 +147,10 @@ def run_command(command):
                 print(e.stderr, end="")
 
         if err_break:
-            print(
-                f"[{YELLOW}LOG{RESET}] "
-                f"An error occurred, breaking process... [1]"
-            )
+            print(f"[{YELLOW}LOG{RESET}] An error occurred, breaking process... [1]")
             sys.exit(1)
 
-    except Exception as e:
+    except OSError as e:
         print(
             f"[{RED}ERROR{RESET}] "
             f"Command '{command}' failed "
@@ -162,16 +158,14 @@ def run_command(command):
         )
 
         if err_break:
-            print(
-                f"[{YELLOW}LOG{RESET}] "
-                f"An error occurred, breaking process... [1]"
-            )
+            print(f"[{YELLOW}LOG{RESET}] An error occurred, breaking process... [1]")
             sys.exit(1)
 
 
+def run_line(path):
+    install_file = Path(path).expanduser().resolve() / "Info" / ".harbinstall"
 
-def run_line():
-    with open("/Info/.harbinstall", "r", encoding="utf-8") as file:
+    with install_file.open("r", encoding="utf-8") as file:
         for line in file:
             line = line.strip()
 
