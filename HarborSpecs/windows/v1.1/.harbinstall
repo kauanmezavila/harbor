@@ -1,8 +1,0 @@
-# HarborBeacon 1.1.0 - windows / x86_64
-shell-mode true
-output true
-err-break true
-usr-log true
-hrb:> py -3 -m venv .venv
-hrb:> .venv\Scripts\python -m pip install -r requirements.txt
-hrb:> .venv\Scripts\python app.py --setup-windows

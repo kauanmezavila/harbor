@@ -1,8 +1,0 @@
-# HarborBeacon 1.2.0 - macos / arm64
-shell-mode false
-output true
-err-break true
-usr-log true
-hrb:> python3 -m venv .venv
-hrb:> .venv/bin/python -m pip install -r requirements.txt
-hrb:> .venv/bin/python app.py --setup-macos --with-reports
