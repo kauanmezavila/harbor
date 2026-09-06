@@ -1,4 +1,5 @@
 # Upcoming!
+Improvement on stacks configuration 
 
 # Updates
 
