@@ -206,13 +206,14 @@ A única coisa que você realmente precisa seguir aqui é deixar a pasta `Harbor
 
 ## HarborMap.yaml
 
-Este é o coração do `harbor install`. Nele você configura as informações que vão guiar o sistema.
+Esse é o CORAÇÃO do harbor install, aqui você pode configurar algumas coisas que vão guiar o sistema.
 
-O que você PRECISA seguir na estrutura:
+O que você PRECISA seguir para construir:
 - Nomes como:
   - project
   - description
   - variants
+  - type
   - path
   - version
   - os
@@ -220,52 +221,83 @@ O que você PRECISA seguir na estrutura:
   - runtime
 - Indentação
 
-Um exemplo, se você seguir assim, seus usuários terão uma experiência muito melhor:
+Um exemplo, se você segui-lo os usuários terão uma ótima experiência de download:
 ```yaml
-project: HarborBeacon                                                                        # Nome do projeto mostrado no menu de instalação
-description: Same fictional project packaged as HarborSpecs variants by OS, architecture, and version. # Descrição do projeto mostrada no menu de instalação
+project: HarborBeacon # O nome do projeto
+description: Same fictional project packaged as HarborSpecs variants by OS, architecture, and version. # Descrição do projeto
 
-variants:                                                           # Uma lista de objetos de variante de fonte
-  - path: any/v1.1/HarborBeacon-Any-Any-[HARBOR].harb               # O CAMINHO, isso é MUITO IMPORTANTE; considere o caminho depois de HarborSpecs
-    version: 1.1.0                                                  # Importante para o filtro
-    os: Any                                                         # Importante para o filtro também
-    architecture: Any                                               # O mesmo
-    runtime: python>=3.12                                           # Não é tão importante, mas ajuda no filtro
-
-  - path: any/v1.2/HarborBeacon-Any-Any-[HARBOR].harb
+variants:
+  - type: .harb                                            # IMPORTANTE: fala para o harbor como tratar essa variante, nesse caso como um .harb
+    path: any/v1.1/HarborBeacon-Any-Any-[HARBOR].harb      # IMPORTANTE: a localização do .harb
+    version: 1.1.0                                         # Importante: bom para controle de versão
+    os: Any                                                # Importante: para verificação de compatibilidade
+    architecture: Any                                      # Importante: para verificação de compatibilidade
+    runtime: python>=3.12                                  # importante: para verificação de compatibilidade, but the container header can make this too
+                                                           # VARIANTE DE URL ABAIXO
+  - type: .harb
+    path: any/v1.2/HarborBeacon-Any-Any-[HARBOR].harb
     version: 1.2.0
     os: Any
     architecture: Any
     runtime: python>=3.12
 
-  - path: linux/v1.0/HarborBeacon-x86_64-linux-[HARBOR].harb
+  - type: .harb
+    path: linux/v1.0/HarborBeacon-x86_64-linux-[HARBOR].harb
     version: 1.0.0
     os: linux
     architecture: x86_64
     runtime: python>=3.12
 
-  - path: linux/v1.1/HarborBeacon-arm64-linux-[HARBOR].harb
+  - type: .harb
+    path: linux/v1.1/HarborBeacon-arm64-linux-[HARBOR].harb
     version: 1.1.0
     os: linux
     architecture: arm64
     runtime: python>=3.12
 
-  - path: linux/v1.2/HarborBeacon-x86_64-arm64-linux-[HARBOR].harb
+  - type: .harb
+    path: linux/v1.2/HarborBeacon-x86_64-arm64-linux-[HARBOR].harb
     version: 1.2.0
     os: linux
     architecture: x86_64, arm64
     runtime: python>=3.12
 
-  - path: mac/v1.2/HarborBeacon-arm64-macos-[HARBOR].harb
+  - type: .harb
+    path: mac/v1.2/HarborBeacon-arm64-macos-[HARBOR].harb
     version: 1.2.0
     os: macos
     architecture: arm64
     runtime: python>=3.12
 
-  - path: windows/v1.1/HarborBeacon-x86_64-windows-[HARBOR].harb
+  - type: .harb
+    path: windows/v1.1/HarborBeacon-x86_64-windows-[HARBOR].harb
     version: 1.1.0
     os: windows
     architecture: x86_64
+    runtime: python>=3.12
+
+  - type: url                                                   # IMPORTANTE: fala para o harbor como tratar essa variante
+    url: https://example.invalid/harborbeacon/install.sh        # IMPORTANTE: onde o arquivo de instalação está
+    command: echo "[HARBOR] simulated install for linux x86_64" # IMPORTANTE: como rodar o script de instalação
+    version: 2.0.0                                              # Importante: para controle de versão
+    os: linux                                                   # Importante: para verificação de compatibilidade
+    architecture: x86_64                                        # Importante: para verificação de compatibilidade
+    runtime: python>=3.12                                       # importante: para verificação de compatibilidade
+
+  - type: url
+    url: https://example.invalid/harborbeacon/install.ps1
+    command: echo "[HARBOR] simulated install for windows x86_64"
+    version: 2.0.0
+    os: windows
+    architecture: x86_64
+    runtime: python>=3.12
+
+  - type: url
+    url: https://example.invalid/harborbeacon/install.sh
+    command: echo "[HARBOR] simulated install for macos arm64"
+    version: 2.0.0
+    os: macos
+    architecture: arm64
     runtime: python>=3.12
 ```
 
@@ -341,7 +373,6 @@ Exportações `.bcb` criptografadas usam AES-GCM através do pacote `cryptograph
 │   ├── HarborBanner.png
 │   └── Harbor.png
 ├── main.py
-├── OfficeStuff
 ├── pyproject.toml
 ├── README.md
 ├── README.pt-BR.md

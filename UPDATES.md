@@ -1,8 +1,12 @@
 # Upcoming!
 
-New type of downloading for harbor install
+Nothing for now...
 
 # Updates
+
+## v1.3.2
+
+Types of installation added (url and .harb)
 
 ## v1.3.1
 

@@ -985,7 +985,7 @@ def print_resolution(
     print(f"  Runtime: {YELLOW}{selected.get('runtime', 'Any')}{RESET}")
 
     if selected_type == "url":
-        print(f"  Command:  {YELLOW}{selected.get('command') or 'unknown'}{RESET}")
+        print(f"  Command: {YELLOW}{selected.get('command') or 'unknown'}{RESET}")
 
     print(f"\n{BOLD}Candidates{RESET}")
 
