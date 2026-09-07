@@ -1,5 +1,4 @@
 # Upcoming!
-Improvement on stacks configuration 
 
 New type of downloading for harbor install
 
