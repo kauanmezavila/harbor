@@ -126,6 +126,22 @@ node_modules/
 *.log
 ```
 
+## Editor de stacks
+
+No novo editor de stacks adicionamos suporte a mais operadores como:
+- `>=`
+- `<=`
+- `!=`
+- `==`
+- `>`
+- `<`
+- `=`
+
+E limitadores como:
+- `python>=3.12, <3.14`
+
+Porém, LEMBRE-SE: lógicas de sintaxe estranhas como `python>3.12, <3.11` provavelmente quebrarão o sistema, então por favor, use seu cérebro enquanto estiver fazendo isso :).
+
 ## HarborSpecs
 
 Na versão 1.3.0, adicionamos o `HarborSpecs`, uma pasta na raiz do projeto.

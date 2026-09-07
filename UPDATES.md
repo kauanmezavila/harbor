@@ -1,7 +1,13 @@
 # Upcoming!
 Improvement on stacks configuration 
 
+New type of downloading for harbor install
+
 # Updates
+
+## v1.3.1
+
+Support for new operators and limiters on harbor stacks system
 
 ## v1.3.0
 

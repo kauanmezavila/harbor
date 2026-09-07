@@ -56,6 +56,152 @@ def get_directory() -> Path:
 # LANGUAGE / RUNTIME
 # ============================================================
 
+SUPPORTED_OPERATORS = (
+    ">=",
+    "<=",
+    "!=",
+    "==",
+    ">",
+    "<",
+    "=",
+)
+
+
+def validate_requirement(lang):
+    """
+    Validate the syntax of a language requirement.
+
+    Valid examples:
+
+        python>=3.12
+        node>=22,<25
+        go=1.24
+        java==21
+        rust!=1.80
+
+    Invalid examples:
+
+        python
+        python>>
+        python>=
+        python>=abc
+        python>=3.12,
+        python>=3.12,<
+        python>=3.12,,<3.14
+
+    Returns:
+
+        {
+            "valid": True,
+            "language": "python",
+            "requirements": [
+                {
+                    "operator": ">=",
+                    "version": "3.12"
+                }
+            ]
+        }
+
+    Or:
+
+        {
+            "valid": False,
+            "reason": "..."
+        }
+    """
+
+    if not isinstance(lang, str):
+        return {
+            "valid": False,
+            "reason": "Requirement must be a string.",
+        }
+
+    lang = lang.strip()
+
+    if not lang:
+        return {
+            "valid": False,
+            "reason": "Requirement is empty.",
+        }
+
+    # ---------------------------------------------------------
+    # Language
+    # ---------------------------------------------------------
+
+    match = re.match(
+        r"^([a-zA-Z0-9_-]+)",
+        lang,
+    )
+
+    if not match:
+        return {
+            "valid": False,
+            "reason": "Invalid language name.",
+        }
+
+    language = match.group(1)
+
+    # Everything after the language name.
+    requirements_string = lang[match.end() :].strip()
+
+    if not requirements_string:
+        return {
+            "valid": False,
+            "reason": "Missing version requirement.",
+            "language": language,
+        }
+
+    # ---------------------------------------------------------
+    # Split interval
+    # ---------------------------------------------------------
+
+    parts = requirements_string.split(",")
+
+    if any(not part.strip() for part in parts):
+        return {
+            "valid": False,
+            "reason": "Empty requirement in interval.",
+            "language": language,
+        }
+
+    requirements = []
+
+    # ---------------------------------------------------------
+    # Validate each requirement
+    # ---------------------------------------------------------
+
+    for part in parts:
+
+        part = part.strip()
+
+        match = re.fullmatch(
+            r"(>=|<=|!=|==|>|<|=)" r"\s*" r"([0-9]+(?:\.[0-9]+)*)",
+            part,
+        )
+
+        if not match:
+            return {
+                "valid": False,
+                "reason": (f"Invalid version requirement: " f"'{part}'"),
+                "language": language,
+            }
+
+        operator = match.group(1)
+        version = match.group(2)
+
+        requirements.append(
+            {
+                "operator": operator,
+                "version": version,
+            }
+        )
+
+    return {
+        "valid": True,
+        "language": language,
+        "requirements": requirements,
+    }
+
 
 def extract_lang(cmd, version_args="--version"):
     """
@@ -118,9 +264,9 @@ def parse_version(version):
         return None
 
 
-def compare_versions(installed, required):
+def normalize_versions(installed, required):
     """
-    Compare two version tuples.
+    Make both version tuples have the same length.
 
     Missing components are treated as zero.
     """
@@ -134,7 +280,73 @@ def compare_versions(installed, required):
 
     required = required + (0,) * (length - len(required))
 
-    return installed >= required
+    return installed, required
+
+
+def compare_versions(installed, required, operator):
+    """
+    Compare two version tuples using an operator.
+
+    Supported operators:
+
+        >=
+        >
+        =
+        ==
+        <=
+        <
+        !=
+    """
+
+    installed, required = normalize_versions(
+        installed,
+        required,
+    )
+
+    if operator == ">=":
+        return installed >= required
+
+    if operator == ">":
+        return installed > required
+
+    if operator in ("=", "=="):
+        return installed == required
+
+    if operator == "<=":
+        return installed <= required
+
+    if operator == "<":
+        return installed < required
+
+    if operator == "!=":
+        return installed != required
+
+    return None
+
+
+def parse_requirement(requirement):
+    """
+    Parse a single version requirement.
+
+    Examples:
+
+        '>=3.12' -> ('>=', '3.12')
+        '<3.14'  -> ('<', '3.14')
+        '==22'   -> ('==', '22')
+    """
+
+    match = re.fullmatch(
+        r"\s*(>=|<=|!=|==|>|<|=)\s*" r"([0-9]+(?:\.[0-9]+)*)\s*",
+        requirement,
+    )
+
+    if not match:
+        return None
+
+    operator = match.group(1)
+    version = match.group(2)
+
+    return operator, version
 
 
 def check_langs(lang):
@@ -142,14 +354,37 @@ def check_langs(lang):
     Check whether a required runtime is compatible
     with the version installed on the system.
 
-    Expected format:
+    Supports single requirements:
 
         python>=3.13
         node>=22
-        go>=1.24
-    """
+        go=1.24
+        java!=21
 
-    if ">=" not in lang:
+    And version intervals:
+
+        python>=3.12,<3.14
+        node>=22,<25
+        go>1.23,<=1.25
+    """
+    valid = validate_requirement(lang)
+
+    if not valid["valid"]:
+        return {
+            "status": "invalid:",
+            "language": valid.get("language", lang),
+            "required": None,
+            "installed": None,
+            "reason": valid.get("reason", "Unknown reason"),
+        }
+
+    # Find the first version operator.
+    match = re.match(
+        r"^\s*([a-zA-Z0-9_-]+)\s*(>=|<=|!=|==|>|<|=)",
+        lang,
+    )
+
+    if not match:
         return {
             "status": "unsupported",
             "language": lang,
@@ -157,21 +392,73 @@ def check_langs(lang):
             "installed": None,
         }
 
-    command, required_version = lang.split(
-        ">=",
-        1,
-    )
+    command = match.group(1)
 
-    command = command.strip()
-    required_version = required_version.strip()
+    # Everything after the language name is the
+    # version requirement.
+    requirements_string = lang[match.end(1) :].strip()
 
-    if not command or not required_version:
+    if not command or not requirements_string:
         return {
             "status": "invalid",
             "language": command or lang,
-            "required": required_version or None,
+            "required": requirements_string or None,
             "installed": None,
         }
+
+    # Split interval conditions.
+    #
+    # Example:
+    #
+    # >=3.12,<3.14
+    #
+    # becomes:
+    #
+    # [">=3.12", "<3.14"]
+    requirements = [
+        requirement.strip() for requirement in requirements_string.split(",")
+    ]
+
+    if not requirements or any(not requirement for requirement in requirements):
+        return {
+            "status": "invalid",
+            "language": command,
+            "required": requirements_string,
+            "installed": None,
+        }
+
+    parsed_requirements = []
+
+    for requirement in requirements:
+        parsed = parse_requirement(requirement)
+
+        if parsed is None:
+            return {
+                "status": "unsupported",
+                "language": command,
+                "required": requirements_string,
+                "installed": None,
+            }
+
+        operator, required_version = parsed
+
+        required = parse_version(required_version)
+
+        if required is None:
+            return {
+                "status": "invalid_version",
+                "language": command,
+                "required": requirements_string,
+                "installed": None,
+            }
+
+        parsed_requirements.append(
+            (
+                operator,
+                required_version,
+                required,
+            )
+        )
 
     version_in_system = extract_lang(command)
 
@@ -179,31 +466,48 @@ def check_langs(lang):
         return {
             "status": "not_found",
             "language": command,
-            "required": required_version,
+            "required": requirements_string,
             "installed": None,
         }
 
-    required = parse_version(required_version)
-
     installed = parse_version(version_in_system)
 
-    if required is None or installed is None:
+    if installed is None:
         return {
             "status": "invalid_version",
             "language": command,
-            "required": required_version,
+            "required": requirements_string,
             "installed": version_in_system,
         }
 
-    compatible = compare_versions(
-        installed,
-        required,
-    )
+    # Every condition in an interval must be satisfied.
+    for operator, required_version, required in parsed_requirements:
+        compatible = compare_versions(
+            installed,
+            required,
+            operator,
+        )
+
+        if compatible is None:
+            return {
+                "status": "unsupported",
+                "language": command,
+                "required": requirements_string,
+                "installed": version_in_system,
+            }
+
+        if not compatible:
+            return {
+                "status": "wrong_version",
+                "language": command,
+                "required": requirements_string,
+                "installed": version_in_system,
+            }
 
     return {
-        "status": ("compatible" if compatible else "wrong_version"),
+        "status": "compatible",
         "language": command,
-        "required": required_version,
+        "required": requirements_string,
         "installed": version_in_system,
     }
 
@@ -566,19 +870,20 @@ def test_compatibility(path=None):
         required = result["required"]
         installed = result["installed"]
         status = result["status"]
+        reason = result.get("reason", "Unknown reason")
 
         if status == "compatible":
             print(
                 f"       {GREEN}OK{RESET} "
-                f"{language} >= {required} "
-                f"(installed: {installed})"
+                f"{language}: {required} "
+                f"(installed: {GREEN}{installed}{RESET})"
             )
 
         elif status == "wrong_version":
             print(
                 f"       {RED}NO{RESET} "
-                f"{language} >= {required} "
-                f"(installed: {installed})"
+                f"{language}: {required} "
+                f"(installed: {RED}{installed}{RESET})"
             )
 
         elif status == "not_found":
@@ -590,7 +895,7 @@ def test_compatibility(path=None):
             print(f"       {YELLOW}??{RESET} {stack} (unsupported requirement)")
 
         elif status == "invalid":
-            print(f"       {RED}NO{RESET} {stack} (invalid requirement)")
+            print(f"       {RED}NO{RESET} {stack} ({reason})")
 
         elif status == "invalid_version":
             print(

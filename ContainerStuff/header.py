@@ -1,6 +1,7 @@
 import json
 
 from ContainerStuff.dirtrain import main_dirtrain
+from ContainerStuff.compatibility import validate_requirement
 
 RESET = "\033[0m"
 BOLD = "\033[1m"
@@ -14,6 +15,113 @@ YELLOW = "\033[93m"
 RED = "\033[91m"
 WHITE = "\033[97m"
 GRAY = "\033[90m"
+
+
+def edit_stack_list(stack_list):
+    """Interactively edit the project stack list."""
+
+    stack_list = list(stack_list)
+
+    while True:
+        print("\n" + "=" * 50)
+        print(f"{BOLD}PROJECT STACKS{RESET}")
+        print("=" * 50)
+
+        if stack_list:
+            for i, item in enumerate(stack_list, start=1):
+                print(f"{i:>3}. {item}")
+        else:
+            print(f"{GRAY}No stacks configured.{RESET}")
+
+        print("\n[a] Add")
+        print("[r] Remove")
+        print("[e] Edit")
+        print("[q] Continue")
+
+        action = input("\nChoose an action: ").strip().lower()
+
+        # -----------------------------
+        # Add
+        # -----------------------------
+        if action == "a":
+            item = input("Enter stack (e.g. python>=3.12, <3.14): ").strip()
+
+            if item:
+                if item in stack_list:
+                    print(f"{YELLOW}[ WARNING ] Stack already exists.{RESET}")
+                else:
+                    valid = validate_requirement(item)
+                    if not valid["valid"]:
+                        print(
+                            f"{RED}[ ERROR ] Invalid stack requirement: {valid.get('reason', 'Unknown reason')}{RESET}"
+                        )
+                    else:
+                        stack_list.append(item)
+                        print(f"{GREEN}[ OK ] Added: {item}{RESET}")
+
+        # -----------------------------
+        # Remove
+        # -----------------------------
+        elif action == "r":
+            if not stack_list:
+                print(f"{YELLOW}Nothing to remove.{RESET}")
+                continue
+
+            try:
+                index = int(input("Enter stack index to remove: ").strip())
+
+                item = stack_list[index - 1]
+
+                stack_list.pop(index - 1)
+
+                print(f"{GREEN}[ OK ] Removed: {item}{RESET}")
+
+            except (ValueError, IndexError):
+                print(f"{RED}[ ERROR ] Invalid index.{RESET}")
+
+        # -----------------------------
+        # Edit
+        # -----------------------------
+        elif action == "e":
+            if not stack_list:
+                print(f"{YELLOW}Nothing to edit.{RESET}")
+                continue
+
+            try:
+                index = int(input("Enter stack index to edit: ").strip())
+
+                old_item = stack_list[index - 1]
+
+                new_item = input(f"New value for '{old_item}': ").strip()
+
+                if new_item:
+                    valid = validate_requirement(new_item)
+                    if not valid["valid"]:
+                        print(
+                            f"{RED}[ ERROR ] Invalid stack requirement: {valid.get('reason', 'Unknown reason')}{RESET}"
+                        )
+
+                    else:
+                        stack_list[index - 1] = new_item
+
+                        print(
+                            f"{GREEN}[ OK ] "
+                            f"Changed '{old_item}' -> '{new_item}'{RESET}"
+                        )
+
+            except (ValueError, IndexError):
+                print(f"{RED}[ ERROR ] Invalid index.{RESET}")
+
+        # -----------------------------
+        # Continue
+        # -----------------------------
+        elif action == "q":
+            break
+
+        else:
+            print(f"{YELLOW}Unknown option.{RESET}")
+
+    return stack_list
 
 
 def normalize_list(value):
@@ -94,6 +202,17 @@ def header(path):
 
         if not tree:
             raise ValueError("Could not determine the project tree.")
+
+        edit_stack_ask = (
+            input(f"Do you want to edit the {MAGENTA}project stacks{RESET}? [Y/n]: ")
+            .strip()
+            .lower()
+        )
+
+        if edit_stack_ask == "n":
+            pass
+        else:
+            stack_list = edit_stack_list(stack_list)
 
         default_project_name = next(iter(tree))
 
