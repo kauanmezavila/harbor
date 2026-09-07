@@ -789,6 +789,7 @@ def run_variant_url(
                 shell=True,
                 check=True,
             )
+            break
 
         elif ask_run_command == "n":
             print(f"[ {GREEN}OK{RESET} ] Action cancelled")
