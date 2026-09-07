@@ -188,7 +188,9 @@ def detect_runtimes(
 # ============================================================
 
 REQUIREMENT_PATTERN = re.compile(
-    r"\s*([a-zA-Z0-9_-]+)\s*" r"(>=|<=|==|>|<)\s*" r"([0-9]+(?:\.[0-9]+)*)\s*"
+    r"\s*([a-zA-Z0-9_-]+)\s*"
+    r"(>=|<=|!=|==|>|<|=)\s*"
+    r"([0-9]+(?:\.[0-9]+)*)\s*"
 )
 
 
@@ -258,6 +260,37 @@ def versions_equal(
     return left_version == right_version
 
 
+def normalize_variant_type(value: Any) -> str:
+    """Normalize variant type names and keep old Harbor files working."""
+
+    if value is None:
+        return "harb"
+
+    normalized = str(value).strip().lower()
+
+    if not normalized:
+        return "harb"
+
+    if normalized in {"harb", ".harb"}:
+        return "harb"
+
+    if normalized in {"url"}:
+        return "url"
+
+    return normalized
+
+
+def variant_location(variant: dict[str, Any]) -> tuple[str, str]:
+    """Return the human-facing location label for a variant."""
+
+    variant_type = normalize_variant_type(variant.get("type"))
+
+    if variant_type == "url":
+        return "URL", str(variant.get("url") or "unknown")
+
+    return "Path", str(variant.get("path") or "unknown")
+
+
 def runtime_satisfies(
     requirement: RuntimeRequirement,
     installed_version: str,
@@ -284,6 +317,12 @@ def runtime_satisfies(
 
     if requirement.operator == "<":
         return installed < required
+
+    if requirement.operator == "!=":
+        return installed != required
+
+    if requirement.operator == "=":
+        return installed == required
 
     return False
 
@@ -508,6 +547,7 @@ def resolve_variants(
     target_architecture: str | None = None,
     installed_runtimes: dict[str, str] | None = None,
     force: bool = False,
+    url: bool = False,
 ) -> dict[str, Any]:
 
     if not isinstance(variants, list):
@@ -549,6 +589,14 @@ def resolve_variants(
 
     for variant in variants:
         if not isinstance(variant, dict):
+            continue
+
+        variant_type = normalize_variant_type(variant.get("type"))
+
+        if variant_type not in {"harb", "url"}:
+            continue
+
+        if url and variant_type != "url":
             continue
 
         matches = (
@@ -724,6 +772,31 @@ def download_variant_harb(
     return output_path
 
 
+def run_variant_url(
+    command: str,
+) -> None:
+    """Run a remote installer command for a URL-based variant."""
+
+    if not command or not str(command).strip():
+        raise ValueError("Selected URL variant does not define a command")
+
+    while True:
+        ask_run_command = input(f"You want to execute: '{command}'? [y/n]").strip().lower()
+
+        if ask_run_command == "y":
+            subprocess.run(
+                command,
+                shell=True,
+                check=True,
+            )
+
+        elif ask_run_command == "n":
+            print(f"[ {GREEN}OK{RESET} ] Action cancelled")
+
+        else:
+            print(f"\n[ {YELLOW}!{RESET} ] Explicit confirm this action to avoid malicious commands")
+
+
 # ============================================================
 # COMMAND PARSING
 # ============================================================
@@ -850,6 +923,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="Git branch to use when downloading HarborMap.yaml. Defaults to default.",
     )
 
+    install_parser.add_argument(
+        "-u",
+        "--url",
+        dest="url",
+        action='store_true',
+        help="Limit selection to URL variants."
+    )
+
     return parser
 
 
@@ -892,11 +973,18 @@ def print_resolution(
         print(f"  [{RED}NONE{RESET}] No compatible variant found.")
         return None, None
 
-    print(f"  Path:    {YELLOW}{selected.get('path', 'unknown')}{RESET}")
+    selected_type = normalize_variant_type(selected.get("type"))
+    label, location = variant_location(selected)
+
+    print(f"  Type:    {YELLOW}{selected_type}{RESET}")
+    print(f"  {label}:    {YELLOW}{location}{RESET}")
     print(f"  Version: {YELLOW}{selected.get('version', 'unknown')}{RESET}")
     print(f"  OS:      {YELLOW}{selected.get('os', 'Any')}{RESET}")
     print(f"  Arch:    {YELLOW}{selected.get('architecture', 'Any')}{RESET}")
     print(f"  Runtime: {YELLOW}{selected.get('runtime', 'Any')}{RESET}")
+
+    if selected_type == "url":
+        print(f"  Command:  {YELLOW}{selected.get('command') or 'unknown'}{RESET}")
 
     print(f"\n{BOLD}Candidates{RESET}")
 
@@ -907,11 +995,13 @@ def print_resolution(
             start=1,
         ):
             variant = candidate.variant
+            variant_type = normalize_variant_type(variant.get("type"))
+            _, location = variant_location(variant)
 
             print(
                 f"  {index}. "
                 f"{MAGENTA}"
-                f"{variant.get('path', 'unknown')}"
+                f"[{variant_type}] {location}"
                 f"{RESET} "
                 f"| version="
                 f"{MAGENTA}"
@@ -922,9 +1012,9 @@ def print_resolution(
                 f"{candidate.specificity}"
                 f"{RESET}"
             )
-            other_candidates[index] = variant.get("path", "unknown")
+            other_candidates[index] = location
 
-        selected_path: str = selected.get("path", "unknown")
+        selected_path = variant_location(selected)[1]
 
         return selected_path, other_candidates
 
@@ -973,6 +1063,7 @@ def install_project(
     target_architecture: str | None = None,
     force: bool = False,
     target_branch: str | None = None,
+    url: bool = False
 ) -> int:
 
     print(f"{BOLD}{MAGENTA}===== {WHITE}Harbor Installer{MAGENTA} ====={RESET}\n")
@@ -1066,6 +1157,7 @@ def install_project(
             target_os=normalized_os,
             target_architecture=normalized_architecture,
             force=force,
+            url=url
         )
 
         # ----------------------------------------------------
@@ -1117,14 +1209,37 @@ def install_project(
             )
             return 1
 
+        selected_variant = candidate.variant
+        selected_type = normalize_variant_type(selected_variant.get("type"))
+
+        if selected_type == "url":
+            command = selected_variant.get("command")
+
+            if not command or not str(command).strip():
+                raise ValueError("No installing command specified for URL variant")
+
+            print(
+                f"[{GREEN} OK {RESET}] "
+                f"Selected URL installer: {selected_variant.get('url') or 'unknown'}"
+            )
+
+            try:
+                run_variant_url(command)
+            except subprocess.CalledProcessError as exc:
+                raise RuntimeError(
+                    f"URL installer failed with return code {exc.returncode}"
+                ) from exc
+
+            return 0
+
         downloaded_harb = download_variant_harb(
             user,
             repo,
-            candidate.variant["path"],
+            selected_variant["path"],
             branch=target_branch,
         )
 
-        print(f"[{GREEN} OK {RESET}] " f"Downloaded candidate: {downloaded_harb}")
+        print(f"[{GREEN} OK {RESET}] Downloaded candidate: {downloaded_harb}")
 
         if downloaded_harb.suffix == ".harb":
             project_integrity = verify(downloaded_harb)
@@ -1203,6 +1318,13 @@ def install_project(
     except requests.RequestException as exc:
         print(
             f"[{RED}ERROR{RESET}] GitHub request failed: {exc}",
+            file=sys.stderr,
+        )
+        return 1
+
+    except subprocess.CalledProcessError as exc:
+        print(
+            f"[{RED}ERROR{RESET}] URL installer failed: {exc}",
             file=sys.stderr,
         )
         return 1

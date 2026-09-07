@@ -184,6 +184,14 @@ def main():
         help="Git branch to use when downloading HarborMap.yaml. Defaults to default.",
     )
 
+    install.add_argument(
+        "-u",
+        "--url",
+        dest="url",
+        action='store_true',
+        help="Limit selection to URL variants."
+    )
+
     # ========================================================
     # PARSE
     # ========================================================
@@ -229,6 +237,7 @@ def main():
             target_architecture=args.target_architecture,
             force=args.force,
             target_branch=args.target_branch,
+            url=args.url
         )
 
 
