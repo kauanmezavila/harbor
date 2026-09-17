@@ -43,16 +43,16 @@ Harbor is not Docker. It is closer to a project packager, verifier, and compatib
 
 ## Install
 
+Install from PyPI (recommended):
+```bash
+pipx install byharbor
+```
+
+Or install from source:
 ```bash
 git clone https://github.com/kauanmezavila/harbor.git
 cd Harbor
-```
-
-Now choose the most adequate method:
-```bash
 pip install .
-python -m pip install .
-pipx install .            <--- i HIGHLY recommend this one
 ```
 (Note: we use pyproject.toml to habilite the global command)
 
