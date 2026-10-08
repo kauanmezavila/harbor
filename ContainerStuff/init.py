@@ -69,8 +69,10 @@ STRUCTURE = {
     ".gitignore": "",
 }
 
+
 def init_project(root: Path) -> None:
     create_tree(root, STRUCTURE)
+
 
 def create_tree(parent: Path, children: dict) -> None:
     parent.mkdir(parents=True, exist_ok=True)
