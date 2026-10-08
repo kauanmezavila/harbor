@@ -50,11 +50,13 @@ cd Harbor
 ```
 
 Instale a CLI com um destes métodos:
+
 ```bash
 uv tool install .
 pipx install .
 python -m pip install .
 ```
+
 `uv tool install .` e `pipx install .` instalam o Harbor como uma ferramenta isolada.
 
 ## Uso
@@ -88,6 +90,7 @@ harbor compatibility "MyApp-Any-Any-[HARBOR]"
 harbor run "MyApp-Any-Any-[HARBOR]"
 harbor install linus/myapp@latest --branch master
 ```
+
 `harbor init MeuApp` cria `HarborSpecs/` com `HarborMap.yaml` e as pastas de variantes `any/`, `linux/`, `mac/` e `windows/`. Também cria `README.md`, `.harbinstall` e `.gitignore` sem sobrescrever arquivos existentes.
 
 Por segurança, `run` só executa `.harbinstall` quando chamado na raiz do projeto.
@@ -117,7 +120,6 @@ MyApp-Any-Any-[HARBOR]_encrypted.bcb
 
 A parte `Any-Any` muda quando você define arquiteturas ou sistemas operacionais específicos durante o empacotamento.
 
-
 ## Regras De Ignore
 
 Adicione um arquivo `.harbignore` na raiz do projeto para excluir arquivos ou pastas do contêiner. É como um `.gitignore`.
@@ -134,6 +136,7 @@ node_modules/
 ## Editor de stacks
 
 No novo editor de stacks adicionamos suporte a mais operadores como:
+
 - `>=`
 - `<=`
 - `!=`
@@ -143,6 +146,7 @@ No novo editor de stacks adicionamos suporte a mais operadores como:
 - `=`
 
 E limitadores como:
+
 - `python>=3.12, <3.14`
 
 Porém, LEMBRE-SE: lógicas de sintaxe estranhas como `python>3.12, <3.11` provavelmente quebrarão o sistema, então por favor, use seu cérebro enquanto estiver fazendo isso :).
@@ -153,6 +157,7 @@ Na versão 1.3.0, adicionamos o `HarborSpecs`, uma pasta na raiz do projeto.
 Nessa pasta você coloca a pasta do sistema operacional, depois da versão.
 
 Um exemplo:
+
 ```text
 .
 ├── ContainerStuff
@@ -176,7 +181,7 @@ Um exemplo:
 |
 ├── HarborSpecs                                                <--- Aqui fica a pasta HarborSpecs
 |   ├── HarborMap.yaml                                         <--- Aqui fica o arquivo HarborMap
-│   ├── any                                                    <--- Em "Any" você coloca o código que roda em QUALQUER OS
+│   ├── any                                                    <--- Em "Any" você coloca o código que roda em QUALQUER OS e ARQUITETURA
 │   │   ├── v1.1                                               <--- A versão
 │   │   │   └── HarborBeacon-Any-Any-[HARBOR].harb             <--- A fonte do código
 │   │   └── v1.2
@@ -214,6 +219,7 @@ A única coisa que você realmente precisa seguir aqui é deixar a pasta `Harbor
 Esse é o CORAÇÃO do harbor install, aqui você pode configurar algumas coisas que vão guiar o sistema.
 
 O que você PRECISA seguir para construir:
+
 - Nomes como:
   - project
   - description
@@ -227,18 +233,20 @@ O que você PRECISA seguir para construir:
 - Indentação
 
 Um exemplo, se você segui-lo os usuários terão uma ótima experiência de download:
+
 ```yaml
 project: HarborBeacon # O nome do projeto
 description: Same fictional project packaged as HarborSpecs variants by OS, architecture, and version. # Descrição do projeto
 
 variants:
-  - type: .harb                                            # IMPORTANTE: fala para o harbor como tratar essa variante, nesse caso como um .harb
-    path: any/v1.1/HarborBeacon-Any-Any-[HARBOR].harb      # IMPORTANTE: a localização do .harb
-    version: 1.1.0                                         # Importante: bom para controle de versão
-    os: Any                                                # Importante: para verificação de compatibilidade
-    architecture: Any                                      # Importante: para verificação de compatibilidade
-    runtime: python>=3.12                                  # importante: para verificação de compatibilidade, but the container header can make this too
-                                                           # VARIANTE DE URL ABAIXO
+  - type: .harb # IMPORTANTE: fala para o harbor como tratar essa variante, nesse caso como um .harb
+    path: any/v1.1/HarborBeacon-Any-Any-[HARBOR].harb # IMPORTANTE: a localização do .harb
+    version: 1.1.0 # Importante: bom para controle de versão
+    os: Any # Importante: para verificação de compatibilidade
+    architecture: Any # Importante: para verificação de compatibilidade
+    runtime:
+      python>=3.12 # importante: para verificação de compatibilidade, but the container header can make this too
+      # VARIANTE DE URL ABAIXO
   - type: .harb
     path: any/v1.2/HarborBeacon-Any-Any-[HARBOR].harb
     version: 1.2.0
@@ -281,13 +289,13 @@ variants:
     architecture: x86_64
     runtime: python>=3.12
 
-  - type: url                                                   # IMPORTANTE: fala para o harbor como tratar essa variante
-    url: https://example.invalid/harborbeacon/install.sh        # IMPORTANTE: onde o arquivo de instalação está
+  - type: url # IMPORTANTE: fala para o harbor como tratar essa variante
+    url: https://example.invalid/harborbeacon/install.sh # IMPORTANTE: onde o arquivo de instalação está
     command: echo "[HARBOR] simulated install for linux x86_64" # IMPORTANTE: como rodar o script de instalação
-    version: 2.0.0                                              # Importante: para controle de versão
-    os: linux                                                   # Importante: para verificação de compatibilidade
-    architecture: x86_64                                        # Importante: para verificação de compatibilidade
-    runtime: python>=3.12                                       # importante: para verificação de compatibilidade
+    version: 2.0.0 # Importante: para controle de versão
+    os: linux # Importante: para verificação de compatibilidade
+    architecture: x86_64 # Importante: para verificação de compatibilidade
+    runtime: python>=3.12 # importante: para verificação de compatibilidade
 
   - type: url
     url: https://example.invalid/harborbeacon/install.ps1
@@ -314,14 +322,17 @@ Se você especificar bem o caminho, dá para organizar o `HarborSpecs` de vária
 Na versão 1.2.1, o Harbor passou a ter suporte ao `.harbinstall`: um arquivo que ajuda na instalação usando `subprocess`.
 
 Para usar:
+
 - 1: Crie o arquivo de instalação como faria com um `.sh` ou `.bat`. Lembre-se de que ele roda linha por linha.
 - 2: Adicione o prefixo `hrb:> ` e comandos HARB-IMG se quiser:
+
 ```bash
 shell-mode  : executa comandos com shell ou lista de subprocessos [começa como 'True']
 output      : captura a saída [começa como 'False']
 err-break   : define se o HARB-IMG deve parar quando ocorrer um erro [começa como 'False']
 usr-log     : mostra os logs do HARB-IMG para o usuário [começa como 'True']
 ```
+
 Nota: se você não escrever um `.harbinstall` na raiz, o Harbor colocará um vazio na pasta `Info` do contêiner.
 
 ## Nota De Segurança
@@ -337,12 +348,15 @@ Exportações `.bcb` criptografadas usam AES-GCM através do pacote `cryptograph
 │   ├── compatibility.py
 │   ├── dirtrain.py
 │   ├── header.py
+│   ├── init.py
 │   ├── install.py
 │   ├── Obsidian
 │   │   └── BaseSystem
 │   │       ├── crypto.py
 │   │       ├── hasher.py
 │   │       └── main.py
+│   ├── __pycache__
+│   │   └── init.cpython-312.pyc
 │   ├── runinstall.py
 │   ├── stack.py
 │   ├── wrapper.py
