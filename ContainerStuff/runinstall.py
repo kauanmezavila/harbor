@@ -55,7 +55,7 @@ def run_harb_command(command):
         elif cmd[1] == "off":
             capture_output = False
         else:
-            print(f"[{RED}ERROR{RESET}] Uso: output [on|off]")
+            print(f"[{RED}ERROR{RESET}] Use: output [on|off]")
             return
 
         if usr_log:
@@ -69,7 +69,7 @@ def run_harb_command(command):
         elif cmd[1] == "off":
             err_break = False
         else:
-            print(f"[{RED}ERROR{RESET}] Uso: err-break [on|off]")
+            print(f"[{RED}ERROR{RESET}] Use: err-break [on|off]")
             return
 
         if usr_log:
@@ -83,13 +83,13 @@ def run_harb_command(command):
         elif cmd[1] == "off":
             usr_log = False
         else:
-            print(f"[{RED}ERROR{RESET}] Uso: err-break [on|off]")
+            print(f"[{RED}ERROR{RESET}] Use: err-break [on|off]")
             return
 
         print(f"{HARB_CMD_PREFIX} usr-log: {usr_log}")
 
     else:
-        print(f"[{RED}ERROR{RESET}] Comando desconhecido: {cmd[0]}")
+        print(f"[{RED}ERROR{RESET}] Unknowm command: {cmd[0]}")
 
 
 def run_command(command):

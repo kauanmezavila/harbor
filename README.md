@@ -30,6 +30,7 @@ Harbor is not Docker. It is closer to a project packager, verifier, and compatib
 
 ## Features
 
+- `init`: create a Harbor project scaffold with `HarborSpecs/`, `HarborMap.yaml`, variant directories, `README.md`, `.harbinstall`, and `.gitignore`.
 - `wrapper`: create a Harbor container from a project directory.
 - `inflate`: extract a `.harb` container.
 - `restore`: decrypt and extract an encrypted `.bcb` export.
@@ -48,13 +49,13 @@ git clone https://github.com/kauanmezavila/harbor.git
 cd Harbor
 ```
 
-Now choose the most adequate method:
+Install the CLI with one of these methods:
 ```bash
-pip install .
+uv tool install .
+pipx install .
 python -m pip install .
-pipx install .            <--- i HIGHLY recommend this one
 ```
-(Note: we use pyproject.toml to habilite the global command)
+`uv tool install .` and `pipx install .` install Harbor as an isolated command-line tool.
 
 ## Usage
 
@@ -64,6 +65,7 @@ harbor <command> <args>
 
 ```text
 Commands:
+  init <path>                               Create a Harbor project scaffold
   wrapper <path>                            Create a Harbor container
   inflate <file.harb> [--out <directory>]   Extract a .harb container
   restore <file.bcb> --password <password>  Restore an encrypted .bcb export
@@ -77,6 +79,7 @@ Commands:
 Examples:
 
 ```bash
+harbor init MyApp
 harbor wrapper MyApp
 harbor inflate "MyApp-Any-Any-[HARBOR].harb" --out ./restored
 harbor restore "MyApp-Any-Any-[HARBOR]_encrypted.bcb" --password "secret" --out ./restored
@@ -85,7 +88,9 @@ harbor compatibility "MyApp-Any-Any-[HARBOR]"
 harbor run "MyApp-Any-Any-[HARBOR]"
 harbor install linus/myapp@latest --branch master
 ```
-Note: for security reasons, `run` will may only run `.harbinstall` when runned in the project root dir
+`harbor init MyApp` creates `HarborSpecs/` with `HarborMap.yaml` and the `any/`, `linux/`, `mac/`, and `windows/` variant directories. It also creates `README.md`, `.harbinstall`, and `.gitignore` without replacing existing files.
+
+For security reasons, `run` executes `.harbinstall` only from the project root.
 
 ## Container Output
 

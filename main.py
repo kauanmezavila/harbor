@@ -8,6 +8,7 @@ from ContainerStuff.runinstall import run_line
 from ContainerStuff.wrapper import decompress_harb, main_wrapper
 from ContainerStuff.WrapperStuff.hashflux import update_hash
 from ContainerStuff.WrapperStuff.verifyflux import verify
+from ContainerStuff.init import init_project
 
 
 def main():
@@ -17,6 +18,21 @@ def main():
         dest="command",
         required=True,
         help="Sub-command to run",
+    )
+
+    # ========================================================
+    # init
+    # ========================================================
+
+    init = subparsers.add_parser(
+        "init",
+        help="Initialize a new Harbor project",
+    )
+
+    init.add_argument(
+        "path",
+        type=Path,
+        help="Path to the project directory.",
     )
 
     # ========================================================
@@ -188,8 +204,8 @@ def main():
         "-u",
         "--url",
         dest="url",
-        action='store_true',
-        help="Limit selection to URL variants."
+        action="store_true",
+        help="Limit selection to URL variants.",
     )
 
     # ========================================================
@@ -204,6 +220,9 @@ def main():
 
     if args.command == "compatibility":
         test_compatibility(args.path)
+
+    elif args.command == "init":
+        init_project(args.path)
 
     elif args.command == "verify":
         verify(args.path)
@@ -237,7 +256,7 @@ def main():
             target_architecture=args.target_architecture,
             force=args.force,
             target_branch=args.target_branch,
-            url=args.url
+            url=args.url,
         )
 
 

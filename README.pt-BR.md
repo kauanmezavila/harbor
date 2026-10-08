@@ -30,6 +30,7 @@ Harbor não é um Docker. Está mais próximo de um empacotador de projeto, veri
 
 ## Funções
 
+- `init`: cria a estrutura inicial de um projeto Harbor com `HarborSpecs/`, `HarborMap.yaml`, pastas de variantes, `README.md`, `.harbinstall` e `.gitignore`.
 - `wrapper`: cria um contêiner Harbor a partir de um diretório de projeto.
 - `inflate`: extrai um container `.harb`.
 - `restore`: descriptografa e extrai um `.bcb` criptografado.
@@ -48,13 +49,13 @@ git clone https://github.com/kauanmezavila/harbor.git
 cd Harbor
 ```
 
-Agora escolha o método mais adequado pro seu PC
+Instale a CLI com um destes métodos:
 ```bash
-pip install .
+uv tool install .
+pipx install .
 python -m pip install .
-pipx install .            <--- eu recomendo MUITO esse
 ```
-(Nota: usamos pyproject.toml para habilitar o comando global)
+`uv tool install .` e `pipx install .` instalam o Harbor como uma ferramenta isolada.
 
 ## Uso
 
@@ -64,6 +65,7 @@ harbor <command> <args>
 
 ```text
 Comandos:
+  init <path>                               Cria a estrutura inicial de um projeto Harbor
   wrapper <path>                            Cria um contêiner Harbor
   inflate <file.harb> [--out <directory>]   Extrai um contêiner .harb
   restore <file.bcb> --password <password>  Restaura uma exportação .bcb criptografada
@@ -77,6 +79,7 @@ Comandos:
 Exemplos:
 
 ```bash
+harbor init MeuApp
 harbor wrapper MyApp
 harbor inflate "MyApp-Any-Any-[HARBOR].harb" --out ./restored
 harbor restore "MyApp-Any-Any-[HARBOR]_encrypted.bcb" --password "secret" --out ./restored
@@ -85,7 +88,9 @@ harbor compatibility "MyApp-Any-Any-[HARBOR]"
 harbor run "MyApp-Any-Any-[HARBOR]"
 harbor install linus/myapp@latest --branch master
 ```
-Nota: por motivos de segurança, `run` só deve executar o `.harbinstall` quando for rodado na raiz do projeto.
+`harbor init MeuApp` cria `HarborSpecs/` com `HarborMap.yaml` e as pastas de variantes `any/`, `linux/`, `mac/` e `windows/`. Também cria `README.md`, `.harbinstall` e `.gitignore` sem sobrescrever arquivos existentes.
+
+Por segurança, `run` só executa `.harbinstall` quando chamado na raiz do projeto.
 
 ## Saída Do Contêiner
 

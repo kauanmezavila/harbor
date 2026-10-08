@@ -4,6 +4,10 @@ Nothing for now...
 
 # Updates
 
+## v1.3.3
+
+Added harbor initialization
+
 ## v1.3.2
 
 Types of installation added (url and .harb)
@@ -21,7 +25,6 @@ HarborSpecs/ and HarborMap.yaml created
 Used Black to reformat the code
 
 - `install` Install a project from GitHub
-
 
 ## v1.2.1
 

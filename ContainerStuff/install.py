@@ -188,9 +188,7 @@ def detect_runtimes(
 # ============================================================
 
 REQUIREMENT_PATTERN = re.compile(
-    r"\s*([a-zA-Z0-9_-]+)\s*"
-    r"(>=|<=|!=|==|>|<|=)\s*"
-    r"([0-9]+(?:\.[0-9]+)*)\s*"
+    r"\s*([a-zA-Z0-9_-]+)\s*" r"(>=|<=|!=|==|>|<|=)\s*" r"([0-9]+(?:\.[0-9]+)*)\s*"
 )
 
 
@@ -781,7 +779,9 @@ def run_variant_url(
         raise ValueError("Selected URL variant does not define a command")
 
     while True:
-        ask_run_command = input(f"You want to execute: '{command}'? [y/n]").strip().lower()
+        ask_run_command = (
+            input(f"You want to execute: '{command}'? [y/n]").strip().lower()
+        )
 
         if ask_run_command == "y":
             subprocess.run(
@@ -795,7 +795,9 @@ def run_variant_url(
             print(f"[ {GREEN}OK{RESET} ] Action cancelled")
 
         else:
-            print(f"\n[ {YELLOW}!{RESET} ] Explicit confirm this action to avoid malicious commands")
+            print(
+                f"\n[ {YELLOW}!{RESET} ] Explicit confirm this action to avoid malicious commands"
+            )
 
 
 # ============================================================
@@ -928,8 +930,8 @@ def build_parser() -> argparse.ArgumentParser:
         "-u",
         "--url",
         dest="url",
-        action='store_true',
-        help="Limit selection to URL variants."
+        action="store_true",
+        help="Limit selection to URL variants.",
     )
 
     return parser
@@ -1064,7 +1066,7 @@ def install_project(
     target_architecture: str | None = None,
     force: bool = False,
     target_branch: str | None = None,
-    url: bool = False
+    url: bool = False,
 ) -> int:
 
     print(f"{BOLD}{MAGENTA}===== {WHITE}Harbor Installer{MAGENTA} ====={RESET}\n")
@@ -1158,7 +1160,7 @@ def install_project(
             target_os=normalized_os,
             target_architecture=normalized_architecture,
             force=force,
-            url=url
+            url=url,
         )
 
         # ----------------------------------------------------
