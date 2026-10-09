@@ -1,6 +1,7 @@
 import argparse
 from pathlib import Path
 
+from importlib.metadata import metadata, version
 from ContainerStuff.access import restore_container
 from ContainerStuff.compatibility import test_compatibility
 from ContainerStuff.install import install_project
@@ -18,6 +19,15 @@ def main():
         dest="command",
         required=True,
         help="Sub-command to run",
+    )
+
+    # ========================================================
+    # version
+    # ========================================================
+
+    version = subparsers.add_parser(
+        "version",
+        help="Show the current Harbor version",
     )
 
     # ========================================================
@@ -258,6 +268,14 @@ def main():
             target_branch=args.target_branch,
             url=args.url,
         )
+
+    elif args.command == "version":
+
+        name = "harbor"
+
+        data = metadata(name)
+
+        print(data["name"], data["version"])
 
 
 if __name__ == "__main__":
