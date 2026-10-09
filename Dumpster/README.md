@@ -1,1 +1,2 @@
 Here lies all the descarted code that i my vision is no longer usable. But can be used in the future idk
+(Probably never x_x)

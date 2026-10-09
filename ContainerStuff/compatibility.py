@@ -566,6 +566,7 @@ def normalize_arch(value):
         "amd64": "x86_64",
         "x64": "x86_64",
         "x86-64": "x86_64",
+        "x8664": "x86_64",
         "aarch64": "arm64",
         "arm64": "arm64",
         "x86": "x86",
@@ -707,7 +708,7 @@ def test_compatibility(path=None):
 
     if not info_path.exists():
         raise FileNotFoundError(
-            f"\n[{RED}ERROR{RESET}] header.json not found: {info_path}"
+            f"\n[{RED}ERROR{RESET}] Header.json not found: {info_path}"
         )
 
     if not info_path.is_file():
