@@ -11,7 +11,7 @@
 <p align="center">
   <img alt="Python" src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white">
   <img alt="License" src="https://img.shields.io/badge/License-MIT-111111?style=for-the-badge">
-  <img alt="Status" src="https://img.shields.io/badge/Status-v1.0.0-9b59b6?style=for-the-badge">
+  <img alt="Status" src="https://img.shields.io/badge/Status-v1.3.3-9b59b6?style=for-the-badge">
 </p>
 
 ---
